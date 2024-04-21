@@ -15,14 +15,13 @@ export function PlanForm() {
   const [year, setYear] = useState<string>(String(new Date().getFullYear()));
 
   function handleSubmit() {
-    debugger;
     if (!home || !destination) {
       return;
     }
     const params = {
       country_code: home.countryCode,
-      destination: `${home.latitude}:${home.longitude}`,
-      home: `${destination.latitude}:${destination.longitude}`,
+      home: `${home.latitude}:${home.longitude}`,
+      destination: `${destination.latitude}:${destination.longitude}`,
       year: String(year),
     };
     const searchParams = new URLSearchParams(params);

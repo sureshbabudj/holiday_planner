@@ -1,3 +1,5 @@
+import { Place } from "./app/api/plan/places";
+
 export interface NavLink {
   title: string;
   href: string;
@@ -23,16 +25,20 @@ export interface Holiday {
   types: string[];
 }
 
-export type MinimalHoliday = Pick<Holiday, 'date' | 'name'>;
+export type MinimalHoliday = Pick<Holiday, "date" | "name">;
 
 export interface Itinerary {
-  [key: string]: any
+  [key: string]: any;
+  date: string;
+  placesToVisit: string[];
 }
 export interface VacationPlan {
   itinerary: Itinerary;
-  holidaysIncluded: Pick<Holiday, 'date' | 'name'>[];
+  holidaysIncluded: Pick<Holiday, "date" | "name">[];
   best?: boolean; // Flag indicating the best plan
-  tags: string[], rating: Rating;
+  tags: string[];
+  rating: Rating;
+  sightseeingPlans: Itinerary[];
 }
 
 export interface PlanResult {
@@ -40,8 +46,13 @@ export interface PlanResult {
   totalPlans: number;
   totalPages: number;
   currentPage: number;
+  attractions: Place[];
 }
 
 export interface Rating {
-  ratioRating: number; travelTimeRating: number; moreDaysRating: number; shortSweetRating: number; overallRating: number;
+  ratioRating: number;
+  travelTimeRating: number;
+  moreDaysRating: number;
+  shortSweetRating: number;
+  overallRating: number;
 }

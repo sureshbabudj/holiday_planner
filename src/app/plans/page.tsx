@@ -6,8 +6,8 @@ import axios from "axios";
 
 async function getData(searchParams: string): Promise<PlanResult | null> {
   try {
-    // const url = `http://localhost:8101/api/plan?${searchParams}`;
-    const url = `http://localhost:8101/api/dummy?${searchParams}`;
+    const url = `http://localhost:8101/api/plan?${searchParams}`;
+    // const url = `http://localhost:8101/api/dummy?${searchParams}`;
     const res = await axios.get(url);
     return res.data;
   } catch (error) {

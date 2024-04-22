@@ -72,13 +72,13 @@ export interface PlusCode {
 
 export type ItineraryPlace = {
   name: string;
-  id: string
-}
-
+  id: string;
+};
 
 export type ItineraryDay = {
   date: string;
   placesToVisit: ItineraryPlace[];
+  travelTime: number;
 };
 
 // Function to calculate travel time in hours based on transport mode (flight or train/bus)
@@ -96,6 +96,14 @@ export function calculateTravelTimeInHours(
   return { travelTimeInHours, transportMode };
 }
 
+function shuffleArray(array: any[]): any[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 const defaultVisitTime = 2;
 
 // Function to formulate itinerary for a single day
@@ -107,14 +115,14 @@ function formulateItineraryDay(
   const selectedPlaces: Place[] = [];
   let totalTravelTime = 0;
   let remainingTime = travelTimeLimit; // Track remaining time for sightseeing
-
-  for (const place of places) {
+  const shuffledPlaces = shuffleArray(places);
+  for (const place of shuffledPlaces) {
     const prevPlace = selectedPlaces[selectedPlaces.length - 1];
     const travelTime = prevPlace
       ? calculateTravelTimeInHours(
-        getCoordinates(prevPlace),
-        getCoordinates(place)
-      ).travelTimeInHours
+          getCoordinates(prevPlace),
+          getCoordinates(place)
+        ).travelTimeInHours
       : 1; // make 1 hour to travel from hotel
 
     // Prioritize places that fit within remaining travel and sightseeing time
@@ -129,7 +137,14 @@ function formulateItineraryDay(
   }
 
   if (selectedPlaces.length > 0) {
-    return { date: "", placesToVisit: selectedPlaces.map((i) => ({ name: i.name, id: i.place_id })) };
+    return {
+      date: "",
+      travelTime: totalTravelTime,
+      placesToVisit: selectedPlaces.map((i) => ({
+        name: i.name,
+        id: i.place_id,
+      })),
+    };
   }
   return null;
 }
@@ -185,12 +200,12 @@ export function findDaysBetweenDates(from: Date, to: Date): number {
 export function formulateItinerary(
   sightSeeingDays: string[],
   places: Place[]
-): ItineraryDay[] {
+): { travelTime: number; itinerary: ItineraryDay[] } {
   const itinerary: ItineraryDay[] = [];
   const travelTimeLimit = 8; // Adjust travel time limit per day (in hours)
 
   let remainingPlaces = places.slice(); // Copy of all places
-
+  let totalTravelTime = 0;
   for (const date of sightSeeingDays) {
     const dayItinerary = formulateItineraryDay(
       remainingPlaces,
@@ -198,16 +213,18 @@ export function formulateItinerary(
       getVisitTimeBasedOnDays(sightSeeingDays.length)
     );
     if (dayItinerary) {
+      totalTravelTime = totalTravelTime + dayItinerary.travelTime;
       dayItinerary.date = date;
       itinerary.push(dayItinerary);
       // Remove visited places from remaining list
       remainingPlaces = remainingPlaces.filter(
-        (place) => !dayItinerary.placesToVisit.find((i) => i.name === place.name)
+        (place) =>
+          !dayItinerary.placesToVisit.find((i) => i.name === place.name)
       );
     }
   }
 
-  return itinerary;
+  return { itinerary, travelTime: totalTravelTime };
 }
 
 export function calculateDistanceInKm(
@@ -224,9 +241,9 @@ export function calculateDistanceInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(degreesToRadians(lat1)) *
-    Math.cos(degreesToRadians(lat2)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos(degreesToRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -244,52 +261,43 @@ function getCoordinates(place: Place): Coordinates {
   return Object.values(place.geometry.location).map((place) => String(place));
 }
 
-export async function getNearbyPlacesPhoto(
-  photoreference: string,
-  maxheight = 1000,
-  maxwidth = 1600
-): Promise<string> {
-  try {
-    const params = `photoreference=${photoreference}&maxheight=${maxheight}&maxwidth=${maxwidth}&key=${process.env.GOOGLE_MAPS_API}`;
-    const response = await axios.get(
-      `https://maps.googleapis.com/maps/api/place/photo?${params}`
-    );
-    const url = response.request
-      ? `${response.request.host}/${response.request.path}`
-      : "";
-    return url;
-  } catch (error) {
-    console.error("Error fetching nearby places:", error);
-    return "";
-  }
-}
-async function getPhotosForPlaces(results: Place[]): Promise<Place[]> {
-  await results.forEach(async (result: any) => {
-    if (result.photos && result.photos.length) {
-      result.photos[0].url = await getNearbyPlacesPhoto(
-        result.photos[0].photo_reference,
-        result.photos[0].height,
-        result.photos[0].width
-      );
-    }
-  });
-  return results;
-}
-
 export async function getNearbyPlaces(
   location = "-33.8670522,151.1957362",
   radius = 1500,
   placeType = "tourist_attraction"
 ): Promise<Place[]> {
+  const apiKey = process.env.GOOGLE_MAPS_API;
+
+  async function getPhotosForPlaces(results: Place[]): Promise<Place[]> {
+    return Promise.all(
+      results.map(async (result) => {
+        const photos = await Promise.all(
+          result.photos.slice(0, 3).map(async (photo) => {
+            const { height, width, photo_reference } = photo;
+            const params = `photoreference=${photo_reference}&maxheight=${height}&maxwidth=${width}&key=${process.env.GOOGLE_MAPS_API}`;
+            const imageResponse = await axios.get(
+              `https://maps.googleapis.com/maps/api/place/photo?${params}`,
+              {
+                maxRedirects: 5, // Follow up to 5 redirects
+                responseType: "json",
+              }
+            );
+            const url = imageResponse.request.res.responseUrl as string;
+            return { url, ...photo };
+          })
+        );
+        return { ...result, photos };
+      })
+    );
+  }
+
   try {
     const params = `location=${location}&radius=${radius}&type=${placeType}&key=${process.env.GOOGLE_MAPS_API}`;
-    const response = await axios.get(
+    const { data } = (await axios.get(
       `https://maps.googleapis.com/maps/api/place/nearbysearch/json?${params}`
-    );
-    const nearbyPlacesResponse = response.data as NearbyPlacesResponse;
-    // await getPhotosForPlaces(nearbyPlacesResponse.results);
-
-    return nearbyPlacesResponse.results;
+    )) as { data: NearbyPlacesResponse };
+    const places: Place[] = await getPhotosForPlaces(data.results);
+    return places;
   } catch (error) {
     console.error("Error fetching nearby places:", error);
     return [];

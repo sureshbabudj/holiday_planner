@@ -18,7 +18,7 @@ import {
   generateTourPlanTitle,
   findPlaceWithPhotos,
 } from "./places";
-import crypto from 'crypto'
+import crypto from "crypto";
 
 // Function to evaluate the rating for a vacation plan
 function evaluateRating(
@@ -33,9 +33,18 @@ function evaluateRating(
   const ratioRating = ratio * 10;
 
   // 2. Travel Time Constraint
-  const travelTimeInHours = itinerary.travelTimeInHours;
-  const maxTravelTime = vacationDays / 4;
-  const travelTimeRating = travelTimeInHours <= maxTravelTime ? 10 : 0;
+  const travelTimePercentage =
+    (itinerary.siteTravelTimeInHours / (itinerary.totalDays * 9)) * 100;
+  let travelTimeRating;
+  if (travelTimePercentage <= 25) {
+    travelTimeRating = 10;
+  } else if (travelTimePercentage > 25 && travelTimePercentage <= 50) {
+    travelTimeRating = 8;
+  } else if (travelTimePercentage > 50 && travelTimePercentage <= 75) {
+    travelTimeRating = 5;
+  } else {
+    travelTimeRating = 0;
+  }
 
   // 3. More days to travel - more rest and relaxed it can be at the same time pricy
   const moreDaysRating = vacationDays >= 5 ? 8 : vacationDays >= 3 ? 6 : 4;
@@ -63,7 +72,7 @@ function isWeekend(date: Date): boolean {
 }
 
 // Function to generate vacation plans based on duration and maximum travel time
-async function generateVacationPlans(
+function generateVacationPlans(
   duration: number,
   maxTravelTime: number,
   homeAddress: Coordinates,
@@ -71,7 +80,7 @@ async function generateVacationPlans(
   year: number,
   holidayList: Holiday[],
   nearbyPlaces: Place[]
-): Promise<VacationPlan[]> {
+): VacationPlan[] {
   const { travelTimeInHours, transportMode } = calculateTravelTimeInHours(
     homeAddress,
     destinationAddress
@@ -101,6 +110,7 @@ async function generateVacationPlans(
   endDate.setDate(startDate.getDate() + duration);
 
   while (startDate <= endDate) {
+    // console.log({ startDate, endDate });
     // If the chosen month in a year is in the past, throw an error
     if (endDate < new Date()) {
       throw new Error(
@@ -137,7 +147,7 @@ async function generateVacationPlans(
         .map(({ date, name }) => ({ date, name }));
 
       if (holidaysIncluded.length > 0) {
-        const siteSeeingDates = await getSiteSeeingDates(
+        const siteSeeingDates = getSiteSeeingDates(
           vacationStartDate,
           vacationEndDate,
           holidaysIncluded
@@ -148,14 +158,10 @@ async function generateVacationPlans(
           vacationEndDate
         );
 
-        let image = "";
         const randomPlace = findPlaceWithPhotos(nearbyPlaces);
-        if (randomPlace) {
-          const { photo_reference, height, width } = randomPlace.photos[0];
-          image = `https://maps.googleapis.com/maps/api/place/photo?photoreference=${photo_reference}&maxheight=${height}&maxwidth=${width}&key=${process.env.GOOGLE_MAPS_API}`;
-        }
+        let image = randomPlace?.photos[0]?.url;
 
-        const itinerary = {
+        const itinerary: Itinerary = {
           title: generateTourPlanTitle(totalDays),
           fromDate: formatDate(vacationStartDate),
           toDate: formatDate(vacationEndDate),
@@ -166,6 +172,13 @@ async function generateVacationPlans(
           transportMode,
           image,
         };
+
+        const { itinerary: sightSeeingDays, travelTime } = formulateItinerary(
+          itinerary.siteSeeingDates,
+          nearbyPlaces
+        );
+
+        itinerary.siteTravelTimeInHours = travelTime;
 
         const rating = evaluateRating(holidaysIncluded, itinerary);
 
@@ -178,13 +191,10 @@ async function generateVacationPlans(
         else if (duration >= 8 && duration <= 12) tags.push("medium");
         else tags.push("long");
 
-        const sightSeeingDays = formulateItinerary(
-          itinerary.siteSeeingDates,
-          nearbyPlaces
-        );
-
         const plan: VacationPlan = {
-          id: [8, 4, 4, 4, 12].map(n => crypto.randomBytes(n / 2).toString("hex")).join("-"),
+          id: [8, 4, 4, 4, 12]
+            .map((n) => crypto.randomBytes(n / 2).toString("hex"))
+            .join("-"),
           itinerary,
           holidaysIncluded,
           tags,
@@ -196,7 +206,9 @@ async function generateVacationPlans(
         generatedPlans[planKey] = true; // Mark the plan as generated
       }
     }
-    startDate.setDate(startDate.getDate() + 1); // Move to next day
+    startDate = endDate;
+    endDate = new Date(startDate.toDateString());
+    endDate.setDate(startDate.getDate() + duration);
   }
 
   return vacationPlans;
@@ -211,11 +223,11 @@ function formatDate(date: Date): string {
 }
 
 // Function to get site seeing dates
-async function getSiteSeeingDates(
+function getSiteSeeingDates(
   startDate: Date,
   endDate: Date,
   holidaysIncluded: MinimalHoliday[]
-): Promise<string[]> {
+): string[] {
   const siteSeeingDates: string[] = [];
 
   let currentDate = new Date(startDate);
@@ -272,7 +284,7 @@ async function evaluateVacationPlans(
 
   // Generate short-term vacation plans
   const plansGroup = [
-    await generateVacationPlans(
+    generateVacationPlans(
       2,
       2,
       homeAddress,
@@ -281,7 +293,7 @@ async function evaluateVacationPlans(
       holidayList,
       nearbyPlaces
     ), // 2-day plan for travel time within 2 hours
-    await generateVacationPlans(
+    generateVacationPlans(
       3,
       4,
       homeAddress,
@@ -290,7 +302,7 @@ async function evaluateVacationPlans(
       holidayList,
       nearbyPlaces
     ), // 3-day plan for travel time within 3 to 4 hours
-    await generateVacationPlans(
+    generateVacationPlans(
       4,
       8,
       homeAddress,
@@ -301,7 +313,7 @@ async function evaluateVacationPlans(
     ), // 4-day plan for travel time within 5 to 8 hours
 
     // Generate medium-term vacation plans
-    await generateVacationPlans(
+    generateVacationPlans(
       5,
       Infinity,
       homeAddress,
@@ -310,7 +322,7 @@ async function evaluateVacationPlans(
       holidayList,
       nearbyPlaces
     ), // 5-day plan (no maximum travel time)
-    await generateVacationPlans(
+    generateVacationPlans(
       6,
       Infinity,
       homeAddress,
@@ -319,7 +331,7 @@ async function evaluateVacationPlans(
       holidayList,
       nearbyPlaces
     ), // 6-day plan (no maximum travel time)
-    await generateVacationPlans(
+    generateVacationPlans(
       7,
       Infinity,
       homeAddress,
@@ -328,7 +340,7 @@ async function evaluateVacationPlans(
       holidayList,
       nearbyPlaces
     ), // 7-day plan (no maximum travel time)
-    await generateVacationPlans(
+    generateVacationPlans(
       9,
       Infinity,
       homeAddress,
@@ -337,7 +349,7 @@ async function evaluateVacationPlans(
       holidayList,
       nearbyPlaces
     ), // 9-day plan (no maximum travel time)
-    await generateVacationPlans(
+    generateVacationPlans(
       12,
       Infinity,
       homeAddress,
@@ -346,7 +358,7 @@ async function evaluateVacationPlans(
       holidayList,
       nearbyPlaces
     ), // 12-day plan (no maximum travel time)
-    await generateVacationPlans(
+    generateVacationPlans(
       15,
       Infinity,
       homeAddress,
@@ -355,7 +367,7 @@ async function evaluateVacationPlans(
       holidayList,
       nearbyPlaces
     ), // 15-day plan (no maximum travel time)
-    await generateVacationPlans(
+    generateVacationPlans(
       new Date(year, bestMonth + 1, 0).getDate(),
       Infinity,
       homeAddress,
@@ -398,7 +410,8 @@ export async function GET(request: Request) {
     const page = parseInt(params.get("page") || "1");
     const pageSize = parseInt(params.get("pageSize") || "10");
     const response = await axios.get(
-      `https://date.nager.at/api/v3/publicholidays/${year}/${countryCode || "US"
+      `https://date.nager.at/api/v3/publicholidays/${year}/${
+        countryCode || "US"
       }`
     );
     const holidayList = response.data as Holiday[];

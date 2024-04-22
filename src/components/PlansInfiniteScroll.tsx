@@ -30,11 +30,11 @@ export function PlansInfiniteScroll({
   useEffect(() => {
     const loadData = async () => {
       try {
-        // const url = `http://localhost:8101/api/plan?${searchParams}&page=${page}`;
-        const url = `http://localhost:8101/api/dummy?${searchParams}&page=${page}`;
+        const url = `http://localhost:8101/api/plan?${searchParams}&page=${page}`;
+        // const url = `http://localhost:8101/api/dummy?${searchParams}&page=${page}`;
         const res = await axios.get(url);
         const vacationPlansResponse = res.data as PlanResult;
-        setHasMore(totalPages === page);
+        setHasMore(totalPages !== page);
         setPlans((prevData) => [
           ...prevData,
           ...vacationPlansResponse.vacationPlans,
@@ -44,11 +44,6 @@ export function PlansInfiniteScroll({
         return null;
       }
     };
-
-    if (totalPages === page) {
-      setHasMore(false);
-      return;
-    }
     if (page === currentPage) {
       return;
     }
@@ -95,9 +90,11 @@ export function PlansInfiniteScroll({
         {plans && plans.map((plan) => <PlanCard data={plan} key={plan.id} />)}
       </div>
 
-      <div ref={loader} className="container mx-auto">
-        <Skeleton className="h-10 w-full"></Skeleton>
-      </div>
+      {hasMore && (
+        <div ref={loader} className="container mx-auto">
+          <Skeleton className="h-10 w-full"></Skeleton>
+        </div>
+      )}
     </div>
   );
 }

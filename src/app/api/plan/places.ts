@@ -70,9 +70,15 @@ export interface PlusCode {
   global_code: string;
 }
 
+export type ItineraryPlace = {
+  name: string;
+  id: string
+}
+
+
 export type ItineraryDay = {
   date: string;
-  placesToVisit: string[];
+  placesToVisit: ItineraryPlace[];
 };
 
 // Function to calculate travel time in hours based on transport mode (flight or train/bus)
@@ -106,9 +112,9 @@ function formulateItineraryDay(
     const prevPlace = selectedPlaces[selectedPlaces.length - 1];
     const travelTime = prevPlace
       ? calculateTravelTimeInHours(
-          getCoordinates(prevPlace),
-          getCoordinates(place)
-        ).travelTimeInHours
+        getCoordinates(prevPlace),
+        getCoordinates(place)
+      ).travelTimeInHours
       : 1; // make 1 hour to travel from hotel
 
     // Prioritize places that fit within remaining travel and sightseeing time
@@ -123,7 +129,7 @@ function formulateItineraryDay(
   }
 
   if (selectedPlaces.length > 0) {
-    return { date: "", placesToVisit: selectedPlaces.map((i) => i.name) };
+    return { date: "", placesToVisit: selectedPlaces.map((i) => ({ name: i.name, id: i.place_id })) };
   }
   return null;
 }
@@ -196,7 +202,7 @@ export function formulateItinerary(
       itinerary.push(dayItinerary);
       // Remove visited places from remaining list
       remainingPlaces = remainingPlaces.filter(
-        (place) => !dayItinerary.placesToVisit.find((i) => i === place.name)
+        (place) => !dayItinerary.placesToVisit.find((i) => i.name === place.name)
       );
     }
   }
@@ -218,9 +224,9 @@ export function calculateDistanceInKm(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(degreesToRadians(lat1)) *
-      Math.cos(degreesToRadians(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(degreesToRadians(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 

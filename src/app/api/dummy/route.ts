@@ -1,5 +1,6 @@
 
 import { NextResponse } from 'next/server'
+import { samplePlans } from './sample';
 
 // Sample data for generating random words
 const cities = ['New York', 'Los Angeles', 'London', 'Paris', 'Berlin'];
@@ -59,7 +60,8 @@ export async function GET(request: Request) {
         const query = new URL(request.url).searchParams.get('query');
         const length = parseInt(new URL(request.url).searchParams.get('length') || '10');
 
-        return NextResponse.json({ "addresses": Array.from({ length }, generateRandomAddress) }, { status: 200 });
+        // return NextResponse.json({ "addresses": Array.from({ length }, generateRandomAddress) }, { status: 200 });
+        return NextResponse.json(samplePlans, { status: 200 });
     } catch (error) {
         console.error(error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

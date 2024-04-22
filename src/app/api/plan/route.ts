@@ -11,7 +11,6 @@ import axios from "axios";
 import { NextResponse } from "next/server";
 import {
   Place,
-  calculateDistanceInKm,
   getNearbyPlaces,
   formulateItinerary,
   calculateTravelTimeInHours,
@@ -19,6 +18,7 @@ import {
   generateTourPlanTitle,
   findPlaceWithPhotos,
 } from "./places";
+import crypto from 'crypto'
 
 // Function to evaluate the rating for a vacation plan
 function evaluateRating(
@@ -184,6 +184,7 @@ async function generateVacationPlans(
         );
 
         const plan: VacationPlan = {
+          id: [8, 4, 4, 4, 12].map(n => crypto.randomBytes(n / 2).toString("hex")).join("-"),
           itinerary,
           holidaysIncluded,
           tags,
@@ -397,8 +398,7 @@ export async function GET(request: Request) {
     const page = parseInt(params.get("page") || "1");
     const pageSize = parseInt(params.get("pageSize") || "10");
     const response = await axios.get(
-      `https://date.nager.at/api/v3/publicholidays/${year}/${
-        countryCode || "US"
+      `https://date.nager.at/api/v3/publicholidays/${year}/${countryCode || "US"
       }`
     );
     const holidayList = response.data as Holiday[];

@@ -1,4 +1,4 @@
-import { Place } from "./app/api/plan/places";
+import { ItineraryDay, Place } from "./app/api/plan/places";
 
 export interface NavLink {
   title: string;
@@ -29,16 +29,16 @@ export type MinimalHoliday = Pick<Holiday, "date" | "name">;
 
 export interface Itinerary {
   [key: string]: any;
-  date: string;
-  placesToVisit: string[];
 }
+
 export interface VacationPlan {
+  id: string;
   itinerary: Itinerary;
   holidaysIncluded: Pick<Holiday, "date" | "name">[];
   best?: boolean; // Flag indicating the best plan
   tags: string[];
   rating: Rating;
-  sightseeingPlans: Itinerary[];
+  sightseeingPlans: ItineraryDay[];
 }
 
 export interface PlanResult {

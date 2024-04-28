@@ -5,13 +5,20 @@ import axios from "axios";
 import React, { useState, useEffect, useRef } from "react";
 import { PlanCard } from "./PlanCard";
 import { Skeleton } from "./ui/skeleton";
+import { cn } from "@/lib/utils";
+import PlanDetail from "@/app/plans/PlanDetail";
+import { useRouter } from "next/navigation";
+import { PlanSearchParams } from "@/app/plans/page";
 
-interface PlansInfiniteScrollProps {
+interface PlansInfiniteScrollProps
+  extends Pick<PlanSearchParams, "home" | "destination" | "year"> {
   vacationPlans: VacationPlan[];
   currentPage: number;
   searchParams: string;
   totalPages: number;
   totalPlans: number;
+  className?: string;
+  userId: string;
 }
 
 export function PlansInfiniteScroll({
@@ -19,20 +26,33 @@ export function PlansInfiniteScroll({
   currentPage,
   searchParams,
   totalPages,
+  className = "",
+  destination,
+  home,
+  year,
+  userId,
   totalPlans,
 }: PlansInfiniteScrollProps) {
   const [plans, setPlans] = useState<VacationPlan[]>(vacationPlans);
   const [page, setPage] = useState(currentPage);
   const [hasMore, setHasMore] = useState(totalPages !== currentPage);
+  const [openPlan, setOpenPlan] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<null | VacationPlan>(null);
 
   const loader = useRef(null);
+
+  const router = useRouter();
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const url = `http://localhost:8101/api/plan?${searchParams}&page=${page}`;
+        const api = axios.create({
+          baseURL: "http://localhost:8101",
+          withCredentials: true, // Include credentials (cookies) in requests
+        });
+        const url = `/api/plan?${searchParams}&page=${page}&user_id=${userId}`;
         // const url = `http://localhost:8101/api/dummy?${searchParams}&page=${page}`;
-        const res = await axios.get(url);
+        const res = await api.get(url);
         const vacationPlansResponse = res.data as PlanResult;
         setHasMore(totalPages !== page);
         setPlans((prevData) => [
@@ -84,16 +104,50 @@ export function PlansInfiniteScroll({
     };
   }, []);
 
+  const handlePlanClick = (plan: VacationPlan) => {
+    if (!home || !destination || !year) {
+      return;
+    }
+
+    const param = {
+      referer: `home:${home.replace(":", ",")};desti:${destination.replace(
+        ":",
+        ","
+      )};year:${year}`,
+    };
+
+    const searchParams = new URLSearchParams(param);
+    router.push(`/plans/${plan.id}?${searchParams}`);
+  };
+
   return (
-    <div className="w-full">
-      <div className="container mx-auto flex w-full items-stretch py-4 px-6 flex-wrap">
-        {plans && plans.map((plan) => <PlanCard data={plan} key={plan.id} />)}
+    <div className={cn([className])}>
+      <div className="flex flex-row items-stretch flex-wrap">
+        {plans &&
+          plans.map((plan) => (
+            <PlanCard
+              data={plan}
+              key={plan.id}
+              onClick={() => handlePlanClick(plan)}
+            />
+          ))}
       </div>
 
       {hasMore && (
-        <div ref={loader} className="container mx-auto">
+        <div ref={loader}>
           <Skeleton className="h-10 w-full"></Skeleton>
         </div>
+      )}
+
+      {selectedPlan && (
+        <PlanDetail
+          plan={selectedPlan}
+          open={openPlan}
+          onClose={() => {
+            setSelectedPlan(null);
+            setOpenPlan(!openPlan);
+          }}
+        />
       )}
     </div>
   );

@@ -11,7 +11,7 @@ interface HeaderProps {
 export function Header({ navLinks = links }: HeaderProps) {
   return (
     <header className="container mx-auto flex w-full items-center justify-between py-4 px-6">
-      <a href="#">
+      <a href="/">
         <Logo />
       </a>
       <Navigation navLinks={navLinks} />

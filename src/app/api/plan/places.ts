@@ -261,20 +261,17 @@ function getCoordinates(place: Place): Coordinates {
   return Object.values(place.geometry.location).map((place) => String(place));
 }
 
-export async function getNearbyPlaces(
-  location = "-33.8670522,151.1957362",
-  radius = 1500,
-  placeType = "tourist_attraction"
-): Promise<Place[]> {
-  const apiKey = process.env.GOOGLE_MAPS_API;
+const apiKey = process.env.GOOGLE_MAPS_API;
 
-  async function getPhotosForPlaces(results: Place[]): Promise<Place[]> {
-    return Promise.all(
-      results.map(async (result) => {
-        const photos = await Promise.all(
-          result.photos.slice(0, 3).map(async (photo) => {
-            const { height, width, photo_reference } = photo;
-            const params = `photoreference=${photo_reference}&maxheight=${height}&maxwidth=${width}&key=${process.env.GOOGLE_MAPS_API}`;
+export async function getPhotosForPlaces(results: Place[]): Promise<Place[]> {
+  return Promise.all(
+    results.map(async (result) => {
+      if (!result.photos) return result; // If there are no photos, return the result without changes
+      const photos = await Promise.all(
+        result.photos.map(async (photo) => {
+          const { height, width, photo_reference } = photo;
+          const params = `photoreference=${photo_reference}&maxheight=${height}&maxwidth=${width}&key=${apiKey}`;
+          try {
             const imageResponse = await axios.get(
               `https://maps.googleapis.com/maps/api/place/photo?${params}`,
               {
@@ -284,20 +281,30 @@ export async function getNearbyPlaces(
             );
             const url = imageResponse.request.res.responseUrl as string;
             return { url, ...photo };
-          })
-        );
-        return { ...result, photos };
-      })
-    );
-  }
+          } catch (error) {
+            console.error("Error fetching photo:", error);
+            return photo;
+          }
+        })
+      );
+      // Filter out any null values (errors)
+      const filteredPhotos = photos.filter((photo) => photo !== null);
+      return { ...result, photos: filteredPhotos };
+    })
+  );
+}
 
+export async function getNearbyPlaces(
+  location = "-33.8670522,151.1957362",
+  radius = 1500,
+  placeType = "tourist_attraction"
+): Promise<Place[]> {
   try {
-    const params = `location=${location}&radius=${radius}&type=${placeType}&key=${process.env.GOOGLE_MAPS_API}`;
+    const params = `location=${location}&radius=${radius}&type=${placeType}&key=${apiKey}`;
     const { data } = (await axios.get(
       `https://maps.googleapis.com/maps/api/place/nearbysearch/json?${params}`
     )) as { data: NearbyPlacesResponse };
-    const places: Place[] = await getPhotosForPlaces(data.results);
-    return places;
+    return data.results;
   } catch (error) {
     console.error("Error fetching nearby places:", error);
     return [];

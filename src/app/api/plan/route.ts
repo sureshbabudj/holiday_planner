@@ -17,8 +17,12 @@ import {
   findDaysBetweenDates,
   generateTourPlanTitle,
   findPlaceWithPhotos,
+  getPhotosForPlaces,
 } from "./places";
 import crypto from "crypto";
+import { countryCodes } from "./countryCodes";
+import { cookies } from "next/headers";
+import redisClient from "@/lib/redis";
 
 // Function to evaluate the rating for a vacation plan
 function evaluateRating(
@@ -266,10 +270,12 @@ async function evaluateVacationPlans(
   destinationAddress: Coordinates,
   year: number,
   holidayList: Holiday[],
-  page: number = 1,
-  pageSize: number = 10
-): Promise<PlanResult> {
-  const nearbyPlaces = await getNearbyPlaces(destinationAddress.join());
+  cacheKey: string
+): Promise<Pick<PlanResult, "vacationPlans" | "attractions">> {
+  const nearbyPlacesWithoutPhotos = await getNearbyPlaces(
+    destinationAddress.join()
+  );
+  const nearbyPlaces = await getPhotosForPlaces(nearbyPlacesWithoutPhotos);
   const vacationPlans: VacationPlan[] = [];
 
   // Generate long-term vacation plans
@@ -383,6 +389,21 @@ async function evaluateVacationPlans(
   // Sort vacation plans based on rating (highest to lowest)
   vacationPlans.sort((a, b) => b.rating.overallRating - a.rating.overallRating);
 
+  const result = {
+    vacationPlans,
+    attractions: nearbyPlaces,
+  };
+
+  await redisClient.set(cacheKey, JSON.stringify(result), "EX", 3600);
+
+  return result;
+}
+
+function getPaginatedVacationPlans(
+  vacationPlans: VacationPlan[],
+  page: number = 1,
+  pageSize: number = 10
+) {
   const totalPlans = vacationPlans.length;
   const totalPages = Math.ceil(totalPlans / pageSize);
   const startIndex = (page - 1) * pageSize;
@@ -394,14 +415,28 @@ async function evaluateVacationPlans(
     totalPlans,
     totalPages,
     currentPage: page,
-    attractions: nearbyPlaces,
   };
+}
+
+async function getHolidays({
+  countryCode,
+  year,
+}: {
+  countryCode: string;
+  year: string;
+}): Promise<Holiday[]> {
+  const response = await axios.get(
+    `https://date.nager.at/api/v3/publicholidays/${year}/${countryCode || "US"}`
+  );
+  return response.data;
 }
 
 export async function GET(request: Request) {
   try {
     const params = new URL(request.url).searchParams;
-    const countryCode = params.get("country_code");
+    const countyParam = params?.get("country_code")?.split(":");
+    const [country = "United States"] = countyParam ?? [];
+    const countryCode = countryCodes[country] ?? "US";
     const home = params.get("home")?.split(":");
     const destination = params.get("destination")?.split(":");
     const year = parseInt(
@@ -409,27 +444,56 @@ export async function GET(request: Request) {
     );
     const page = parseInt(params.get("page") || "1");
     const pageSize = parseInt(params.get("pageSize") || "10");
-    const response = await axios.get(
-      `https://date.nager.at/api/v3/publicholidays/${year}/${
-        countryCode || "US"
-      }`
-    );
-    const holidayList = response.data as Holiday[];
+    const userId = params.get("user_id");
 
-    if (!home || !destination) {
+    if (!home || !destination || !userId) {
       throw { error: "Invalid request" };
     }
 
-    const vacationPlans = await evaluateVacationPlans(
-      home,
-      destination,
-      year,
-      holidayList,
-      page,
-      pageSize
-    );
+    let result: PlanResult | undefined;
+    let headers: HeadersInit = {};
 
-    return NextResponse.json(vacationPlans, { status: 200 });
+    const cacheKey = `user:${userId};home:${home};desti:${destination};year:${year}`;
+
+    let data = await redisClient.get(cacheKey);
+    if (data) {
+      const { attractions, vacationPlans } = JSON.parse(data) as Pick<
+        PlanResult,
+        "vacationPlans" | "attractions"
+      >;
+      const paginatedResults = getPaginatedVacationPlans(
+        vacationPlans,
+        page,
+        pageSize
+      );
+      result = { ...paginatedResults, attractions };
+    } else {
+      const holidayList = await getHolidays({
+        countryCode,
+        year: String(year),
+      });
+
+      const { vacationPlans, attractions } = await evaluateVacationPlans(
+        home,
+        destination,
+        year,
+        holidayList,
+        cacheKey
+      );
+
+      const paginatedResults = getPaginatedVacationPlans(
+        vacationPlans,
+        page,
+        pageSize
+      );
+
+      result = { ...paginatedResults, attractions };
+    }
+
+    return Response.json(result, {
+      status: 200,
+      headers,
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

@@ -1,26 +1,15 @@
-import { Rating, VacationPlan } from "@/types";
-import { Button } from "./ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "./ui/card";
-import { ItineraryPlace } from "@/app/api/plan/places";
-import { ScrollArea } from "./ui/scroll-area";
+"use client";
 import React from "react";
-import { BusIcon, Car, EyeIcon, Plane, Ship, Train } from "lucide-react";
+import { Rating, VacationPlan } from "@/types";
+import { ItineraryPlace } from "@/app/api/plan/places";
+import { BusIcon, Car, Plane, Ship, Train } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  HoverCard,
-  HoverCardTrigger,
-  HoverCardContent,
-} from "@radix-ui/react-hover-card";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "./ui/hover-card";
+import { Button } from "./ui/button";
 
 interface PlanCardProps {
   data: VacationPlan;
+  onClick?: (data: VacationPlan) => void;
 }
 
 function RatingHoverCard({ text, rating }: { text: string; rating: Rating }) {
@@ -151,8 +140,7 @@ function TransportIcon({ transport }: { transport: string }) {
       return <Car />;
   }
 }
-
-export function PlanCard({ data }: PlanCardProps) {
+export function PlanCard({ data, onClick }: PlanCardProps) {
   const {
     itinerary,
     holidaysIncluded,
@@ -184,25 +172,25 @@ export function PlanCard({ data }: PlanCardProps) {
   };
 
   return (
-    <div className="xl:w-[calc(25%-1rem)] lg:w-[calc(33%-1rem)] md:w-[calc(50%-1rem)] sm:w-full mr-4 last:mr-0 mb-5 shadow-md rounded-lg text-slate-600 border border-slate-200">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        className="h-56 w-full object-cover object-end rounded-tl-lg rounded-tr-lg"
-        src={itinerary.image}
-        alt="Home in Countryside"
-      />
-      <div className=" min-h-10 rounded-bl-lg rounded-br-lg py-2">
-        <div className="px-4 mb-5">
-          <h2 className="text-lg font-bold text-slate-700">
-            {itinerary.title}
-          </h2>
-          <span className="text-sm block mb-1">
-            {formatTitleDate(itinerary.fromDate)} -{" "}
-            {formatTitleDate(itinerary.toDate)}
-          </span>
-        </div>
+    <div className="mb-4 mr-4 bg-white xl:w-[calc(25%-1rem)] lg:w-[calc(33%-1rem)] md:w-[calc(50%-1rem)] sm:w-full shadow-md rounded-lg text-slate-600 border border-slate-200">
+      <div className="px-4 my-5">
+        <h2 className="text-lg font-bold text-slate-700">{itinerary.title}</h2>
+        <span className="text-sm block mb-1">
+          {formatTitleDate(itinerary.fromDate)} -{" "}
+          {formatTitleDate(itinerary.toDate)}
+        </span>
+      </div>
+      <div className="mx-4 my-4 ">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="w-full h-56 object-cover object-end rounded"
+          src={itinerary.image}
+          alt="Home in Countryside"
+        />
+      </div>
 
-        <div className="flex flex-row mb-2 justify-between px-4 mb-5">
+      <div className=" min-h-10 rounded-bl-lg rounded-br-lg py-2">
+        <div className="flex flex-row justify-between px-4 mb-5">
           <RatingLabel rating={rating} />
           <div className="flex flex-row justify-center items-center">
             <div className="text-md mr-2 rounded-md bg-violet-400 text-slate-50 p-2 flex justify-center">
@@ -251,6 +239,7 @@ export function PlanCard({ data }: PlanCardProps) {
 
         <div className="px-4 flex justify-center">
           <Button
+            onClick={() => onClick?.(data)}
             variant="default"
             className="w-full text-dark text-sm p-2 bg-blue-50 hover:bg-blue-200"
           >

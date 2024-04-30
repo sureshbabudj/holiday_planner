@@ -185,7 +185,7 @@ export function PlanCard({ data, onClick }: PlanCardProps) {
         <img
           className="w-full h-56 object-cover object-end rounded"
           src={itinerary.image}
-          alt="Home in Countryside"
+          alt={itinerary.imageTitle}
         />
       </div>
 

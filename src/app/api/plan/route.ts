@@ -69,6 +69,19 @@ function evaluateRating(
   };
 }
 
+function extractInnerText(htmlString: string): string {
+  return htmlString
+    .replace(/\n/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style[^>]*>/gi, "")
+    .replace(/<head[^>]*>[\s\S]*?<\/head[^>]*>/gi, "")
+    .replace(/<script[^>]*>[\s\S]*?<\/script[^>]*>/gi, "")
+    .replace(/<\/\s*(?:p|div)>/gi, "\n")
+    .replace(/<br[^>]*\/?>/gi, "\n")
+    .replace(/<[^>]*>/gi, "")
+    .replace("&nbsp;", " ")
+    .replace(/[^\S\r\n][^\S\r\n]+/gi, " ");
+}
+
 // Function to check if a given date is a weekend (Saturday or Sunday)
 function isWeekend(date: Date): boolean {
   const dayOfWeek = date.getDay();
@@ -114,7 +127,6 @@ function generateVacationPlans(
   endDate.setDate(startDate.getDate() + duration);
 
   while (startDate <= endDate) {
-    // console.log({ startDate, endDate });
     // If the chosen month in a year is in the past, throw an error
     if (endDate < new Date()) {
       throw new Error(
@@ -163,7 +175,7 @@ function generateVacationPlans(
         );
 
         const randomPlace = findPlaceWithPhotos(nearbyPlaces);
-        let image = randomPlace?.photos[0]?.url;
+        let image = randomPlace?.photos[0];
 
         const itinerary: Itinerary = {
           title: generateTourPlanTitle(totalDays),
@@ -174,7 +186,10 @@ function generateVacationPlans(
           restDate: formatDate(vacationEndDate),
           siteSeeingDates,
           transportMode,
-          image,
+          image: image?.url,
+          imageTitle:
+            image?.html_attributions.length &&
+            extractInnerText(image?.html_attributions[0]),
         };
 
         const { itinerary: sightSeeingDays, travelTime } = formulateItinerary(

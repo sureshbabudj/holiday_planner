@@ -50,7 +50,7 @@ export function PlansInfiniteScroll({
           baseURL: "http://localhost:8101",
           withCredentials: true, // Include credentials (cookies) in requests
         });
-        const url = `/api/plan?${searchParams}&page=${page}&user_id=${userId}`;
+        const url = `/api/plan?${searchParams}&page=${page}`;
         // const url = `http://localhost:8101/api/dummy?${searchParams}&page=${page}`;
         const res = await api.get(url);
         const vacationPlansResponse = res.data as PlanResult;
@@ -68,7 +68,6 @@ export function PlansInfiniteScroll({
       return;
     }
     loadData();
-    console.log({ hasMore });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 

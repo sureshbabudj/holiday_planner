@@ -51,7 +51,7 @@ export function AutoComplete({
   }, 300);
 
   const handleSelect = (option: Option) => {
-    (inputRef.current! as HTMLInputElement).value = option.value;
+    (inputRef.current! as HTMLInputElement).value = option.label;
 
     onValueChange?.(option);
     setOpen(false);

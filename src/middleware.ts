@@ -8,7 +8,6 @@ export function middleware(request: NextRequest) {
 
   if (!request.cookies.has("userid")) {
     const userId = uuidv4();
-    console.log({ userId });
     response.cookies.set({
       name: "userid",
       value: userId,

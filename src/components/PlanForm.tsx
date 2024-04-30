@@ -19,9 +19,8 @@ export function PlanForm() {
       return;
     }
     const params = {
-      country_code: `${home.countryCode}:${home.country}`,
-      home: `${home.latitude}:${home.longitude}`,
-      destination: `${destination.latitude}:${destination.longitude}`,
+      home: home.place_id,
+      destination: destination.place_id,
       year: String(year),
     };
 

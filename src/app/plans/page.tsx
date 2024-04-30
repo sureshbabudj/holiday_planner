@@ -7,20 +7,67 @@ import { PlanResult } from "@/types";
 import axios from "axios";
 import { ImageCarousel } from "./ImageCarousel";
 import { cookies } from "next/headers";
+import { PlaceDetails } from "../api/places/details/route";
+import { countryCodes } from "../api/plan/countryCodes";
+
+function findCountry(details: PlaceDetails): string | undefined {
+  const countryComponent = details.result.address_components.find((component) =>
+    component.types.includes("country")
+  );
+  return countryComponent?.long_name;
+}
+
+interface PlanParams {
+  country_code: string;
+  home: string;
+  destination: string;
+  year: string;
+  user_id: string;
+}
+
+interface PageData {
+  data: PlanResult;
+  planParams: PlanParams;
+}
 
 async function getData(
   searchParams: string,
   userId: string
-): Promise<PlanResult | null> {
+): Promise<PageData | null> {
   try {
+    const homeId = new URLSearchParams(searchParams).get("home");
+    const destinationId = new URLSearchParams(searchParams).get("destination");
+    const year = new URLSearchParams(searchParams).get("year") ?? "";
+    if (!homeId || !destinationId) {
+      return null;
+    }
+
     const api = axios.create({
       baseURL: "http://localhost:8101",
       withCredentials: true, // Include credentials (cookies) in requests
     });
-    const url = `/api/plan?${searchParams}&user_id=${userId}`;
+
+    const [home, destination] = await Promise.all([
+      api.get<PlaceDetails>(`/api/places/details?place_id=${homeId}`),
+      api.get<PlaceDetails>(`/api/places/details?place_id=${destinationId}`),
+    ]);
+
+    const country = findCountry(home.data);
+
+    const planParams: PageData["planParams"] = {
+      country_code: country ? countryCodes[country] : "US",
+      home: `${home.data.result.geometry.location.lat}:${home.data.result.geometry.location.lng}`,
+      destination: `${destination.data.result.geometry.location.lat}:${destination.data.result.geometry.location.lng}`,
+      year,
+      user_id: userId,
+    };
+
+    const planSearchParams = new URLSearchParams(planParams as any).toString();
+
+    const url = `/api/plan?${planSearchParams}`;
     // const url = `http://localhost:8101/api/dummy?${searchParams}`;
     const res = await api.get(url);
-    return res.data;
+    return { data: res.data, planParams };
   } catch (error) {
     console.error(error);
     return null;
@@ -53,8 +100,11 @@ export default async function Page({
     return <div>Error loading plans</div>;
   }
 
+  const { data: plans, planParams } = planResonse;
+  const planSearchParams = new URLSearchParams(planParams as any).toString();
+
   const { currentPage, totalPages, totalPlans, vacationPlans, attractions } =
-    planResonse;
+    plans;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between">
@@ -82,7 +132,7 @@ export default async function Page({
           </ImageCarousel>
           <PlansInfiniteScroll
             className="-mt-[calc(100vh/2.25)] z-10 ml-8 mr-4"
-            searchParams={searchParamsStr}
+            searchParams={planSearchParams}
             vacationPlans={vacationPlans}
             currentPage={currentPage}
             totalPages={totalPages}

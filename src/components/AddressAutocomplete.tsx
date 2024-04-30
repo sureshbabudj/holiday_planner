@@ -5,29 +5,9 @@ import axios from "axios";
 
 import { AutoComplete } from "./ui/AutoComplete";
 import { Option } from "@/types";
+import { Prediction } from "@/app/api/places/autocomplete/route";
 
-export interface Address {
-  latitude: number;
-  longitude: number;
-  geometry: Geometry;
-  country: string;
-  countryCode: string;
-  countryFlag: string;
-  distance: number;
-  city: string;
-  stateCode: string;
-  state: string;
-  layer: string;
-  formattedAddress: string;
-  addressLabel: string;
-}
-
-export type AddressOption = Address & Option;
-
-export interface Geometry {
-  type: string;
-  coordinates: number[];
-}
+export type AddressOption = Prediction & Option;
 
 export interface AddressAutocompleteProps {
   value?: AddressOption;
@@ -35,9 +15,9 @@ export interface AddressAutocompleteProps {
   onValueChange?: (value: AddressOption | undefined) => void;
 }
 
-const url = "https://api.radar.io/v1/search/autocomplete";
-// const url = "/api/dummy";
-const radarToken = "prj_test_pk_befc3ea1d6615d799f0464facde134cefeee4b8a";
+// const url = "https://api.radar.io/v1/search/autocomplete";
+const url = "/api/places/autocomplete";
+// const radarToken = "prj_test_pk_befc3ea1d6615d799f0464facde134cefeee4b8a";
 
 const AddressAutocomplete = ({
   value: input,
@@ -52,18 +32,13 @@ const AddressAutocomplete = ({
   const sendRequest = async (value: string) => {
     try {
       const response = await axios.get(
-        `${url}?query=${encodeURIComponent(value)}`,
-        {
-          headers: {
-            Authorization: radarToken,
-          },
-        }
+        `${url}?input=${encodeURIComponent(value)}`
       );
       const options: AddressOption[] = (
-        response.data.addresses as Address[]
+        response.data.predictions as Prediction[]
       ).map((i) => ({
-        label: i.formattedAddress,
-        value: i.formattedAddress,
+        label: i.description,
+        value: i.place_id,
         ...i,
       }));
 

@@ -8,7 +8,7 @@ import { Skeleton } from "./ui/skeleton";
 import { cn } from "@/lib/utils";
 import PlanDetail from "@/app/plans/PlanDetail";
 import { useRouter } from "next/navigation";
-import { PlanSearchParams } from "@/app/plans/page";
+import { PlanParams, PlanSearchParams } from "@/app/plans/page";
 
 interface PlansInfiniteScrollProps
   extends Pick<PlanSearchParams, "home" | "destination" | "year"> {
@@ -104,6 +104,12 @@ export function PlansInfiniteScroll({
   }, []);
 
   const handlePlanClick = (plan: VacationPlan) => {
+    const params: any = {};
+    Array.from(new URLSearchParams(searchParams)).forEach(
+      ([k, v]) => (params[k] = v)
+    );
+
+    const { destination, home, year } = params as PlanParams;
     if (!home || !destination || !year) {
       return;
     }
@@ -115,8 +121,8 @@ export function PlansInfiniteScroll({
       )};year:${year}`,
     };
 
-    const searchParams = new URLSearchParams(param);
-    router.push(`/plans/${plan.id}?${searchParams}`);
+    const searchParams1 = new URLSearchParams(param);
+    router.push(`/plans/${plan.id}?${searchParams1}`);
   };
 
   return (

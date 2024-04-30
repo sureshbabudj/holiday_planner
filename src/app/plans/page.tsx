@@ -14,10 +14,10 @@ function findCountry(details: PlaceDetails): string | undefined {
   const countryComponent = details.result.address_components.find((component) =>
     component.types.includes("country")
   );
-  return countryComponent?.long_name;
+  return countryComponent?.short_name;
 }
 
-interface PlanParams {
+export interface PlanParams {
   country_code: string;
   home: string;
   destination: string;
@@ -55,7 +55,11 @@ async function getData(
     const country = findCountry(home.data);
 
     const planParams: PageData["planParams"] = {
-      country_code: country ? countryCodes[country] : "US",
+      country_code: country
+        ? countryCodes[country].nagarCode === "NA"
+          ? "US"
+          : countryCodes[country].nagarCode
+        : "US",
       home: `${home.data.result.geometry.location.lat}:${home.data.result.geometry.location.lng}`,
       destination: `${destination.data.result.geometry.location.lat}:${destination.data.result.geometry.location.lng}`,
       year,

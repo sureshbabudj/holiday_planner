@@ -449,9 +449,11 @@ async function getHolidays({
 export async function GET(request: Request) {
   try {
     const params = new URL(request.url).searchParams;
-    const countyParam = params?.get("country_code")?.split(":");
-    const [country = "United States"] = countyParam ?? [];
-    const countryCode = countryCodes[country] ?? "US";
+    const countyParam = params?.get("country_code") ?? "US";
+    const countryCode =
+      countryCodes[countyParam].nagarCode === "NA"
+        ? "US"
+        : countryCodes[countyParam].nagarCode;
     const home = params.get("home")?.split(":");
     const destination = params.get("destination")?.split(":");
     const year = parseInt(

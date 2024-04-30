@@ -36,7 +36,7 @@ function RatingHoverCard({ text, rating }: { text: string; rating: Rating }) {
         </a>
       </HoverCardTrigger>
       <HoverCardContent className="w-fit">
-        <div className="flex flex-col justify-between bg-white text-slate-500 shadow-lg border border-slate-100 p-4">
+        <div className="flex flex-col justify-between ">
           {ratingKeys.map((key, i) => (
             <div
               className={cn([

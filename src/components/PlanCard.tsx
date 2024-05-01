@@ -12,7 +12,13 @@ interface PlanCardProps {
   onClick?: (data: VacationPlan) => void;
 }
 
-function RatingHoverCard({ text, rating }: { text: string; rating: Rating }) {
+export function RatingHoverCard({
+  text,
+  rating,
+}: {
+  text: string;
+  rating: Rating;
+}) {
   const ratingKeys = Object.keys(rating);
   const getRatingKeyLabel = (value: string) => {
     switch (value) {
@@ -66,7 +72,7 @@ function RatingHoverCard({ text, rating }: { text: string; rating: Rating }) {
   );
 }
 
-function RatingIcon({
+export function RatingIcon({
   ratingValue,
   ratingLabel,
   className = "",
@@ -93,7 +99,7 @@ function RatingIcon({
   );
 }
 
-function getRatingLabel(rating: number) {
+export function getRatingLabel(rating: number) {
   let ratingLabel = "";
   if (rating >= 9) {
     ratingLabel = "Highly Recommended";
@@ -107,11 +113,17 @@ function getRatingLabel(rating: number) {
   return ratingLabel;
 }
 
-function RatingLabel({ rating }: { rating: Rating }) {
+export function RatingLabel({
+  rating,
+  className = "",
+}: {
+  rating: Rating;
+  className?: string;
+}) {
   const hoverText = `Based on ${Object.keys(rating).length} ratings`;
   const ratingLabel = getRatingLabel(rating.overallRating);
   return (
-    <div className="flex flex-row justify-center items-center">
+    <div className={cn("flex flex-row justify-center items-center", className)}>
       <RatingIcon
         ratingLabel={ratingLabel}
         ratingValue={rating.overallRating}
@@ -126,7 +138,7 @@ function RatingLabel({ rating }: { rating: Rating }) {
   );
 }
 
-function TransportIcon({ transport }: { transport: string }) {
+export function TransportIcon({ transport }: { transport: string }) {
   switch (transport) {
     case "bus":
       return <BusIcon />;

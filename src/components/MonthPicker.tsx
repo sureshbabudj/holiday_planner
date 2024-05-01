@@ -14,7 +14,7 @@ export interface MonthPickerProps {
   onMonthSelect?: (month: string) => void;
 }
 
-const months = [
+export const months = [
   "January",
   "February",
   "March",

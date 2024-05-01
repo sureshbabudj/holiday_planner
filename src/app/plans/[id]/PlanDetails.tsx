@@ -2,10 +2,13 @@
 "use client";
 
 import { PlanResponse } from "./page";
-import { ItineraryDay } from "@/app/api/plan/places";
+import { ItineraryDay, Place } from "@/app/api/plan/places";
 import { ItineraryDayMenu } from "./ItineraryDayMenu";
 import { PlanDetailHeader } from "./PlanDetailHeader";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { months } from "@/components/MonthPicker";
+import { Holiday } from "@/types";
 
 export interface ItineraryType {
   title: string;
@@ -21,56 +24,192 @@ export interface ItineraryType {
   siteTravelTimeInHours: number;
 }
 
-function ItineraryDayDetails() {
+function DaySerial({ dayNumber }: { dayNumber: number }) {
+  return (
+    <div className="flex flex-col items-center space-y-1 bg-violet-500 text-white rounded-sm px-4 py-1 me-3 justify-center">
+      <div className="text-sm font-semibold uppercase">Day</div>
+      <div className="font-semibold text-3xl">{dayNumber}</div>
+    </div>
+  );
+}
+
+function DateDisplay({ date }: { date: string }) {
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const dateParts = date.split("-");
+  const dateObj = new Date(`${dateParts[1]}/${dateParts[0]}/${dateParts[2]}`);
+  return (
+    <div className="font-semibold text-2xl">
+      {days[dateObj.getDay()].slice(0, 3)},{" "}
+      {months[dateObj.getMonth()].slice(0, 3)} {dateObj.getDate()},{" "}
+      {dateObj.getFullYear()}
+    </div>
+  );
+}
+
+function ItineraryDayDetails({
+  itineraryDay,
+  attractions,
+  dayNumber,
+}: {
+  itineraryDay: ItineraryDay;
+  attractions: Place[];
+  dayNumber: number;
+}) {
+  const daySerial = dayNumber + 1;
+  const { date, placesToVisit, travelTime } = itineraryDay;
+  const places: Place[] = [];
+  placesToVisit.forEach(({ id }) => {
+    const place = attractions.find((place) => place.place_id === id);
+    if (place) places.push(place);
+  });
+
+  const times = ["Morning", "Afternoon", "Evening", "Night"];
+
   return (
     <div className="">
-      <div className="brounded-lg w-full mx-5 space-y-6 p-10">
-        <div>
-          <p className="text-sm leading-6 text-slate-800">
-            Hypnosis at the parallel universe was the advice of alarm, commanded
-            to a conscious ship. Processors experiment with paralysis!
-          </p>
+      <div className="rounded-lg w-full mx-5 space-y-6 p-10">
+        <div className="flex flex-row">
+          <DaySerial dayNumber={daySerial} />
+          <div className="">
+            <DateDisplay date={date} />
+            <p className="text-slate-800">
+              You get to explore {places.length} places and you mostly travel
+              for visiting the places approx. {Math.round(travelTime)} hour(s)
+            </p>
+          </div>
         </div>
-
-        <div className="grid grid-cols-6 col-span-2   gap-2  ">
-          <div className=" overflow-hidden rounded-xl col-span-3 max-h-[14rem]">
-            <img
-              className="h-full w-full object-cover "
-              src="https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=735&q=80"
-              alt=""
-            />
-          </div>
-          <div className=" overflow-hidden rounded-xl col-span-3 max-h-[14rem]">
-            <img
-              className="h-full w-full object-cover  "
-              src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1399&q=80"
-              alt=""
-            />
-          </div>
-          <div className=" overflow-hidden rounded-xl col-span-2 max-h-[10rem]">
-            <img
-              className="h-full w-full object-cover "
-              src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80"
-              alt=""
-            />
-          </div>
-          <div className=" overflow-hidden rounded-xl col-span-2 max-h-[10rem]">
-            <img
-              className="h-full w-full object-cover "
-              src="https://images.unsplash.com/photo-1503602642458-232111445657?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
-              alt=""
-            />
-          </div>
-          <div className="relative overflow-hidden rounded-xl col-span-2 max-h-[10rem]">
-            <div className="text-white text-xl absolute inset-0  bg-slate-900/80 flex justify-center items-center">
-              + 23
+        <h4 className="font-semibold text-xl my-2">Places Overview</h4>
+        <div className="-my-6">
+          <div className="relative pl-8 sm:pl-32 py-6 group">
+            <div className="font-caveat font-medium text-2xl text-indigo-500 mb-1 sm:mb-0">
+              Breakfast
             </div>
-            <img
-              className="h-full w-full object-cover "
-              src="https://images.unsplash.com/photo-1560393464-5c69a73c5770?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=765&q=80"
-              alt=""
-            />
+
+            <div className="flex flex-col sm:flex-row items-start mb-1 group-last:before:hidden before:absolute before:left-2 sm:before:left-0 before:h-full before:px-px before:bg-slate-300 sm:before:ml-[6.5rem] before:self-start before:-translate-x-1/2 before:translate-y-3 after:absolute after:left-2 sm:after:left-0 after:w-2 after:h-2 after:bg-indigo-600 after:border-4 after:box-content after:border-slate-50 after:rounded-full sm:after:ml-[6.5rem] after:-translate-x-1/2 after:translate-y-1.5">
+              <time className="sm:absolute left-0 translate-y-0.5 inline-flex items-center justify-center text-xs font-semibold uppercase w-20 h-6 mb-3 sm:mb-0 text-violet-600 bg-violet-100 rounded-full px-2">
+                9:00
+              </time>
+              <div className="text-xl font-bold text-slate-900">
+                Start from Hotel
+              </div>
+            </div>
           </div>
+          {places.map((place, i) => (
+            <>
+              {parseInt(placesToVisit[i].startTime!) >= 13 &&
+                parseInt(placesToVisit[i].startTime!) <= 15 && (
+                  <div className="relative pl-8 sm:pl-32 py-6 group">
+                    <div className="font-caveat font-medium text-2xl text-indigo-500 mb-1 sm:mb-0">
+                      Lunch
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-start mb-1 group-last:before:hidden before:absolute before:left-2 sm:before:left-0 before:h-full before:px-px before:bg-slate-300 sm:before:ml-[6.5rem] before:self-start before:-translate-x-1/2 before:translate-y-3 after:absolute after:left-2 sm:after:left-0 after:w-2 after:h-2 after:bg-indigo-600 after:border-4 after:box-content after:border-slate-50 after:rounded-full sm:after:ml-[6.5rem] after:-translate-x-1/2 after:translate-y-1.5">
+                      <time className="sm:absolute left-0 translate-y-0.5 inline-flex items-center justify-center text-xs font-semibold uppercase w-20 h-6 mb-3 sm:mb-0 text-violet-600 bg-violet-100 rounded-full px-2">
+                        {times[1]}
+                      </time>
+                      <div className="text-xl font-bold text-slate-900">
+                        At Restaurent
+                      </div>
+                    </div>
+                  </div>
+                )}
+              <div
+                key={place.place_id}
+                className="relative pl-8 sm:pl-32 py-6 group"
+              >
+                <div className="font-caveat font-medium text-2xl text-indigo-500 mb-1 sm:mb-0">
+                  {place.name}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start mb-1 group-last:before:hidden before:absolute before:left-2 sm:before:left-0 before:h-full before:px-px before:bg-slate-300 sm:before:ml-[6.5rem] before:self-start before:-translate-x-1/2 before:translate-y-3 after:absolute after:left-2 sm:after:left-0 after:w-2 after:h-2 after:bg-indigo-600 after:border-4 after:box-content after:border-slate-50 after:rounded-full sm:after:ml-[6.5rem] after:-translate-x-1/2 after:translate-y-1.5">
+                  <time className="sm:absolute left-0 translate-y-0.5 inline-flex items-center justify-center text-xs font-semibold uppercase w-20 h-6 mb-3 sm:mb-0 text-violet-600 bg-violet-100 rounded-full px-2">
+                    {placesToVisit[i].startTime}
+                  </time>
+                  <div className="text-xl font-bold text-slate-900">
+                    {place.vicinity}
+                  </div>
+                </div>
+
+                {place.photos[0] && place.photos[0].url && (
+                  <div className="rounded-xl overflow-hidden lg:max-w-[50%]">
+                    <img
+                      className="h-full w-full object-cover aspect-auto"
+                      src={place.photos[0].url}
+                      alt={place.name}
+                    />
+                  </div>
+                )}
+
+                <div className="flex flex-row space-x-1 my-2">
+                  {place.types.map((tag) => (
+                    <div
+                      key={tag}
+                      className="bg-slate-200 text-slate-700 text-xs px-2 py-1 rounded "
+                    >
+                      {tag.replaceAll("_", " ")}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-row space-x-1 my-2">
+                  <div className="flex flex-row items-center space-x-2">
+                    <span className="text-sm">Google Rating: </span>
+                    <span className="bg-green-500 text-white text-sm px-2 py-1 rounded font-semibold">
+                      {place.rating}
+                    </span>
+                  </div>
+                  <div className="flex flex-row items-center space-x-2">
+                    <span className="text-sm">Based on </span>
+                    <span className="bg-blue-500 text-white text-sm px-2 py-1 rounded font-semibold">
+                      {place.user_ratings_total}
+                    </span>
+                    <span className="text-sm">user ratings</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          ))}
+          <div className="relative pl-8 sm:pl-32 py-6 group">
+            <div className="font-caveat font-medium text-2xl text-indigo-500 mb-1 sm:mb-0">
+              Return
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start mb-1 group-last:before:hidden before:absolute before:left-2 sm:before:left-0 before:h-full before:px-px before:bg-slate-300 sm:before:ml-[6.5rem] before:self-start before:-translate-x-1/2 before:translate-y-3 after:absolute after:left-2 sm:after:left-0 after:w-2 after:h-2 after:bg-indigo-600 after:border-4 after:box-content after:border-slate-50 after:rounded-full sm:after:ml-[6.5rem] after:-translate-x-1/2 after:translate-y-1.5">
+              <time className="sm:absolute left-0 translate-y-0.5 inline-flex items-center justify-center text-xs font-semibold uppercase w-20 h-6 mb-3 sm:mb-0 text-violet-600 bg-violet-100 rounded-full px-2">
+                {times[3]}
+              </time>
+              <div className="text-xl font-bold text-slate-900">To Hotel</div>
+            </div>
+          </div>
+        </div>
+        <h4 className="font-semibold text-xl my-2">Photos</h4>
+        <div className="grid grid-cols-6 col-span-2 gap-2">
+          {places.map((place) => (
+            <>
+              {place.photos.map((photo) => (
+                <div
+                  key={photo.photo_reference}
+                  className={cn(
+                    "overflow-hidden rounded-xl col-span-3 max-h-[10rem]"
+                  )}
+                >
+                  <img
+                    className="h-full w-full object-cover"
+                    src={photo.url}
+                    alt={place.name}
+                  />
+                </div>
+              ))}
+            </>
+          ))}
         </div>
       </div>
     </div>
@@ -90,21 +229,54 @@ export function PlanDetails({ plan }: { plan: PlanResponse }) {
 
   const itinerary = planDetails.itinerary as ItineraryType;
 
-  const [itineraryDay, setItineraryDay] = useState(sightseeingPlans[0]?.date);
+  const [itineraryDay, setItineraryDay] = useState(sightseeingPlans[0]);
+  const [dayNumber, setDayNumber] = useState(0);
 
-  const handleDayClick = (day: ItineraryDay) => {
-    setItineraryDay(day.date);
+  const handleDayClick = (day: ItineraryDay, dayNumber: number) => {
+    setItineraryDay(day);
+    setDayNumber(dayNumber);
+  };
+
+  const generateDescription = () => {
+    let description =
+      "This itinerary covers most of the the tourists attractions such as ";
+    description += attractions
+      .filter((_, i) => i < 3)
+      .map((i) => i.name)
+      .join(", ");
+    description += " and more...";
+    return description;
   };
 
   return (
     <div className="flex flex-col container mx-auto" id={planId}>
       <PlanDetailHeader {...{ ...itinerary, rating }} />
+      <div className="mb-5">
+        <p>{generateDescription()}</p>
+        <div className="mb-2">
+          <div className="text-lg text-slate-700 leading-10">
+            This plan utilises the holidays{" "}
+            {holidaysIncluded.map((holiday) => (
+              <span
+                key={holiday.date}
+                className="bg-blue-400 text-white text-xs px-4 py-[2px] me-1 last:me-0 inline-block rounded"
+              >
+                {holiday.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
       <ItineraryDayMenu
         sightseeingPlans={sightseeingPlans}
         selectedDay={itineraryDay}
         onDayClick={handleDayClick}
       />
-      <ItineraryDayDetails />
+      <ItineraryDayDetails
+        dayNumber={dayNumber}
+        itineraryDay={itineraryDay}
+        attractions={attractions}
+      />
     </div>
   );
 }

@@ -10,8 +10,8 @@ export function ItineraryDayMenu({
   onDayClick,
 }: {
   sightseeingPlans: ItineraryDay[];
-  selectedDay: string;
-  onDayClick?: (day: ItineraryDay) => void;
+  selectedDay: ItineraryDay;
+  onDayClick?: (day: ItineraryDay, dayNumber: number) => void;
 }) {
   return (
     <div className="flex flex-row space-x-3 mb-4 justify-center">
@@ -19,10 +19,10 @@ export function ItineraryDayMenu({
         <Button
           variant="default"
           className={cn("bg-slate-600", {
-            "bg-violet-700": selectedDay === day.date,
+            "bg-violet-700": selectedDay.date === day.date,
           })}
           key={i}
-          onClick={() => onDayClick?.(day)}
+          onClick={() => onDayClick?.(day, i)}
         >
           {day.date}
         </Button>

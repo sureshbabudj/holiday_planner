@@ -73,6 +73,8 @@ export interface PlusCode {
 export type ItineraryPlace = {
   name: string;
   id: string;
+  startTime?: string;
+  endTime?: string;
 };
 
 export type ItineraryDay = {
@@ -104,6 +106,15 @@ function shuffleArray(array: any[]): any[] {
   return array;
 }
 
+// Format time as HH:MM
+function convertTimeToActualFormat(time: number): string {
+  const hours = Math.floor(time);
+  const minutes = Math.round((time - hours) * 60);
+  const formattedHours = hours < 10 ? `0${hours}` : `${hours}`;
+  const formattedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
+  return `${formattedHours}:${formattedMinutes}`;
+}
+
 const defaultVisitTime = 2;
 
 // Function to formulate itinerary for a single day
@@ -112,12 +123,14 @@ function formulateItineraryDay(
   travelTimeLimit: number,
   visitTime: number
 ): ItineraryDay | null {
-  const selectedPlaces: Place[] = [];
+  let startOfDay = 9;
+  const selectedPlaces: { place: Place; startTime: number; endTime: number }[] =
+    [];
   let totalTravelTime = 0;
   let remainingTime = travelTimeLimit; // Track remaining time for sightseeing
   const shuffledPlaces = shuffleArray(places);
   for (const place of shuffledPlaces) {
-    const prevPlace = selectedPlaces[selectedPlaces.length - 1];
+    const prevPlace = selectedPlaces[selectedPlaces.length - 1]?.place;
     const travelTime = prevPlace
       ? calculateTravelTimeInHours(
           getCoordinates(prevPlace),
@@ -128,7 +141,10 @@ function formulateItineraryDay(
     // Prioritize places that fit within remaining travel and sightseeing time
     if (travelTime + visitTime <= remainingTime) {
       // Add place visit time here
-      selectedPlaces.push(place);
+      const startTime = startOfDay + travelTime;
+      const endTime = startTime + visitTime;
+      startOfDay = endTime;
+      selectedPlaces.push({ place, startTime, endTime });
       totalTravelTime = totalTravelTime + travelTime;
       remainingTime = remainingTime - (travelTime + visitTime); // Deduct travel and visit time
     } else {
@@ -140,9 +156,11 @@ function formulateItineraryDay(
     return {
       date: "",
       travelTime: totalTravelTime,
-      placesToVisit: selectedPlaces.map((i) => ({
-        name: i.name,
-        id: i.place_id,
+      placesToVisit: selectedPlaces.map(({ place, startTime, endTime }) => ({
+        name: place.name,
+        id: place.place_id,
+        startTime: convertTimeToActualFormat(startTime),
+        endTime: convertTimeToActualFormat(endTime),
       })),
     };
   }

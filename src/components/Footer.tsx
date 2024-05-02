@@ -8,8 +8,8 @@ export function Footer() {
         <div className="flex w-full flex-col space-y-4 text-center md:w-2/5 md:text-left">
           <Logo />
           <p className="text-sm text-slate-600">
-            HolidayPlanner provides access to fast and reliable financing
-            solutions for SMEs.
+            Our Holiday Planner app allows you to create personalized vacation
+            plans tailored to your preferences.
           </p>
         </div>
         <div className="w-full text-center text-slate-600 md:w-1/5 md:text-left">
@@ -30,7 +30,7 @@ export function Footer() {
           </ul>
         </div>
         <div className="w-full text-center text-slate-600 md:w-1/5 md:text-left">
-          <div className="text-sm font-semibold">Solutions</div>
+          <div className="text-sm font-semibold">Services</div>
           <ul className="text-sm">
             {solutionLinks.map(({ title, href }, index) => (
               <li className="pt-3" key={index}>

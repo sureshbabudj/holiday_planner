@@ -8,7 +8,6 @@ import { PlanDetailHeader } from "./PlanDetailHeader";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { months } from "@/components/MonthPicker";
-import { Holiday } from "@/types";
 
 export interface ItineraryType {
   title: string;
@@ -72,6 +71,15 @@ function ItineraryDayDetails({
   });
 
   const times = ["Morning", "Afternoon", "Evening", "Night"];
+  let isLunchOver = false;
+  const determineLunch = (i: number) => {
+    if (isLunchOver) return false;
+    const isLunchTime =
+      parseInt(placesToVisit[i].startTime!) >= 13 &&
+      parseInt(placesToVisit[i].startTime!) <= 15;
+    isLunchOver = isLunchTime;
+    return isLunchTime;
+  };
 
   return (
     <div className="">
@@ -104,23 +112,22 @@ function ItineraryDayDetails({
           </div>
           {places.map((place, i) => (
             <>
-              {parseInt(placesToVisit[i].startTime!) >= 13 &&
-                parseInt(placesToVisit[i].startTime!) <= 15 && (
-                  <div className="relative pl-8 sm:pl-32 py-6 group">
-                    <div className="font-caveat font-medium text-2xl text-indigo-500 mb-1 sm:mb-0">
-                      Lunch
-                    </div>
+              {determineLunch(i) && (
+                <div className="relative pl-8 sm:pl-32 py-6 group">
+                  <div className="font-caveat font-medium text-2xl text-indigo-500 mb-1 sm:mb-0">
+                    Lunch
+                  </div>
 
-                    <div className="flex flex-col sm:flex-row items-start mb-1 group-last:before:hidden before:absolute before:left-2 sm:before:left-0 before:h-full before:px-px before:bg-slate-300 sm:before:ml-[6.5rem] before:self-start before:-translate-x-1/2 before:translate-y-3 after:absolute after:left-2 sm:after:left-0 after:w-2 after:h-2 after:bg-indigo-600 after:border-4 after:box-content after:border-slate-50 after:rounded-full sm:after:ml-[6.5rem] after:-translate-x-1/2 after:translate-y-1.5">
-                      <time className="sm:absolute left-0 translate-y-0.5 inline-flex items-center justify-center text-xs font-semibold uppercase w-20 h-6 mb-3 sm:mb-0 text-violet-600 bg-violet-100 rounded-full px-2">
-                        {times[1]}
-                      </time>
-                      <div className="text-xl font-bold text-slate-900">
-                        At Restaurent
-                      </div>
+                  <div className="flex flex-col sm:flex-row items-start mb-1 group-last:before:hidden before:absolute before:left-2 sm:before:left-0 before:h-full before:px-px before:bg-slate-300 sm:before:ml-[6.5rem] before:self-start before:-translate-x-1/2 before:translate-y-3 after:absolute after:left-2 sm:after:left-0 after:w-2 after:h-2 after:bg-indigo-600 after:border-4 after:box-content after:border-slate-50 after:rounded-full sm:after:ml-[6.5rem] after:-translate-x-1/2 after:translate-y-1.5">
+                    <time className="sm:absolute left-0 translate-y-0.5 inline-flex items-center justify-center text-xs font-semibold uppercase w-20 h-6 mb-3 sm:mb-0 text-violet-600 bg-violet-100 rounded-full px-2">
+                      {times[1]}
+                    </time>
+                    <div className="text-xl font-bold text-slate-900">
+                      At Restaurent
                     </div>
                   </div>
-                )}
+                </div>
+              )}
               <div
                 key={place.place_id}
                 className="relative pl-8 sm:pl-32 py-6 group"
@@ -138,7 +145,7 @@ function ItineraryDayDetails({
                   </div>
                 </div>
 
-                {place.photos[0] && place.photos[0].url && (
+                {place.photos && place.photos[0] && place.photos[0].url && (
                   <div className="rounded-xl overflow-hidden lg:max-w-[50%]">
                     <img
                       className="h-full w-full object-cover aspect-auto"
@@ -160,19 +167,23 @@ function ItineraryDayDetails({
                 </div>
 
                 <div className="flex flex-row space-x-1 my-2">
-                  <div className="flex flex-row items-center space-x-2">
-                    <span className="text-sm">Google Rating: </span>
-                    <span className="bg-green-500 text-white text-sm px-2 py-1 rounded font-semibold">
-                      {place.rating}
-                    </span>
-                  </div>
-                  <div className="flex flex-row items-center space-x-2">
-                    <span className="text-sm">Based on </span>
-                    <span className="bg-blue-500 text-white text-sm px-2 py-1 rounded font-semibold">
-                      {place.user_ratings_total}
-                    </span>
-                    <span className="text-sm">user ratings</span>
-                  </div>
+                  {place.rating && (
+                    <div className="flex flex-row items-center space-x-2">
+                      <span className="text-sm">Google Rating: </span>
+                      <span className="bg-green-500 text-white text-sm px-2 py-1 rounded font-semibold">
+                        {place.rating}
+                      </span>
+                    </div>
+                  )}
+                  {place.user_ratings_total && (
+                    <div className="flex flex-row items-center space-x-2">
+                      <span className="text-sm">Based on </span>
+                      <span className="bg-blue-500 text-white text-sm px-2 py-1 rounded font-semibold">
+                        {place.user_ratings_total}
+                      </span>
+                      <span className="text-sm">user ratings</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </>
@@ -194,7 +205,7 @@ function ItineraryDayDetails({
         <div className="grid grid-cols-6 col-span-2 gap-2">
           {places.map((place) => (
             <>
-              {place.photos.map((photo) => (
+              {place.photos?.map((photo) => (
                 <div
                   key={photo.photo_reference}
                   className={cn(

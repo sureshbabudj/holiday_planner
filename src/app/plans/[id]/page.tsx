@@ -5,10 +5,13 @@ import { VacationPlan } from "@/types";
 import axios from "axios";
 import { cookies } from "next/headers";
 import { PlanDetails } from "./PlanDetails";
+import { PlaceDetails } from "@/app/api/places/details/route";
 
 export interface PlanResponse {
   plan: VacationPlan;
   attractions: Place[];
+  home: PlaceDetails;
+  destination: PlaceDetails;
 }
 
 async function getData(

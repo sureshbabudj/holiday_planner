@@ -1,3 +1,4 @@
+import { PlaceDetails } from "./app/api/places/details/route";
 import { ItineraryDay, Place } from "./app/api/plan/places";
 
 export interface NavLink {
@@ -47,6 +48,8 @@ export interface PlanResult {
   totalPages: number;
   currentPage: number;
   attractions: Place[];
+  home: PlaceDetails;
+  destination: PlaceDetails;
 }
 
 export interface Rating {

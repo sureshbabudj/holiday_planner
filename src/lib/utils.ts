@@ -1,8 +1,9 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { PlaceDetails } from "@/app/api/places/details/route";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 export const debounce = <T extends (...args: any[]) => any>(
@@ -19,3 +20,10 @@ export const debounce = <T extends (...args: any[]) => any>(
     return result;
   };
 };
+
+export function findCountry(details: PlaceDetails): string | undefined {
+  const countryComponent = details.result.address_components.find((component) =>
+    component.types.includes("country")
+  );
+  return countryComponent?.short_name;
+}

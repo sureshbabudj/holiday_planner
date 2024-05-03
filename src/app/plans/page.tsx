@@ -8,17 +8,8 @@ import axios from "axios";
 import { ImageCarousel } from "./ImageCarousel";
 import { cookies } from "next/headers";
 import { PlaceDetails } from "../api/places/details/route";
-import { countryCodes } from "../api/plan/countryCodes";
-
-function findCountry(details: PlaceDetails): string | undefined {
-  const countryComponent = details.result.address_components.find((component) =>
-    component.types.includes("country")
-  );
-  return countryComponent?.short_name;
-}
 
 export interface PlanParams {
-  country_code: string;
   home: string;
   destination: string;
   year: string;
@@ -47,31 +38,19 @@ async function getData(
       withCredentials: true, // Include credentials (cookies) in requests
     });
 
-    const [home, destination] = await Promise.all([
-      api.get<PlaceDetails>(`/api/places/details?place_id=${homeId}`),
-      api.get<PlaceDetails>(`/api/places/details?place_id=${destinationId}`),
-    ]);
-
-    const country = findCountry(home.data);
-
-    const planParams: PageData["planParams"] = {
-      country_code: country
-        ? countryCodes[country].nagarCode === "NA"
-          ? "US"
-          : countryCodes[country].nagarCode
-        : "US",
-      home: `${home.data.result.geometry.location.lat}:${home.data.result.geometry.location.lng}`,
-      destination: `${destination.data.result.geometry.location.lat}:${destination.data.result.geometry.location.lng}`,
+    const planSearchParams: PlanParams = {
       year,
+      home: homeId,
+      destination: destinationId,
       user_id: userId,
     };
 
-    const planSearchParams = new URLSearchParams(planParams as any).toString();
-
-    const url = `/api/plan?${planSearchParams}`;
+    const url = `/api/plan?${new URLSearchParams(
+      planSearchParams as any
+    ).toString()}`;
     // const url = `http://localhost:8101/api/dummy?${searchParams}`;
     const res = await api.get(url);
-    return { data: res.data, planParams };
+    return { data: res.data, planParams: planSearchParams };
   } catch (error) {
     console.error(error);
     return null;

@@ -25,9 +25,11 @@ export async function GET(
 
     let data = await redisClient.get(cacheKey);
     if (data) {
-      const { attractions, vacationPlans } = JSON.parse(data) as Pick<
+      const { attractions, vacationPlans, home, destination } = JSON.parse(
+        data
+      ) as Pick<
         PlanResult,
-        "vacationPlans" | "attractions"
+        "vacationPlans" | "attractions" | "home" | "destination"
       >;
       const plan = getVacationPlanById(pageId, vacationPlans);
 
@@ -36,7 +38,7 @@ export async function GET(
       }
 
       return Response.json(
-        { plan, attractions },
+        { plan, attractions, home, destination },
         {
           status: 200,
         }

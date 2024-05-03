@@ -23,6 +23,19 @@ import crypto from "crypto";
 import { countryCodes } from "./countryCodes";
 import { cookies } from "next/headers";
 import redisClient from "@/lib/redis";
+import { PlaceDetails } from "../places/details/route";
+import { findCountry } from "@/lib/utils";
+
+interface PlanSearchParams {
+  home: PlaceDetails;
+  destination: PlaceDetails;
+  country_code: string;
+  year: number;
+  userId: string;
+  page: number;
+  pageSize: number;
+  cacheKey: string;
+}
 
 // Function to evaluate the rating for a vacation plan
 function evaluateRating(
@@ -409,8 +422,6 @@ async function evaluateVacationPlans(
     attractions: nearbyPlaces,
   };
 
-  await redisClient.set(cacheKey, JSON.stringify(result), "EX", 3600);
-
   return result;
 }
 
@@ -446,44 +457,112 @@ async function getHolidays({
   return response.data;
 }
 
+async function resolveSearchParams(
+  url: URL
+): Promise<PlanSearchParams | Error> {
+  try {
+    const searchParams = new URL(url).searchParams;
+    const homeId = new URLSearchParams(searchParams).get("home");
+    const destinationId = new URLSearchParams(searchParams).get("destination");
+    const userId = new URLSearchParams(searchParams).get("user_id");
+    if (!homeId || !destinationId || !userId) {
+      throw { message: "Missing required parameters" };
+    }
+
+    const year = parseInt(
+      searchParams.get("year") || String(new Date().getFullYear())
+    );
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "10");
+
+    const api = axios.create({
+      baseURL: "http://localhost:8101",
+      withCredentials: true, // Include credentials (cookies) in requests
+    });
+
+    const [home, destination] = await Promise.all([
+      api.get<PlaceDetails>(`/api/places/details?place_id=${homeId}`),
+      api.get<PlaceDetails>(`/api/places/details?place_id=${destinationId}`),
+    ]);
+
+    const country = findCountry(home.data);
+    const country_code = country
+      ? countryCodes[country].nagarCode === "NA"
+        ? "US"
+        : countryCodes[country].nagarCode
+      : "US";
+
+    const cacheKey = `user:${userId};home:${homeId};desti:${destinationId};year:${year}`;
+
+    return {
+      home: home.data,
+      destination: destination.data,
+      country_code,
+      year,
+      userId,
+      page,
+      pageSize,
+      cacheKey,
+    };
+  } catch (error: any) {
+    console.log(error);
+    return error?.message
+      ? new Error(error.message)
+      : new Error("Internal server Error");
+  }
+}
+
 export async function GET(request: Request) {
   try {
-    const params = new URL(request.url).searchParams;
-    const countyParam = params?.get("country_code") ?? "US";
-    const countryCode =
-      countryCodes[countyParam].nagarCode === "NA"
-        ? "US"
-        : countryCodes[countyParam].nagarCode;
-    const home = params.get("home")?.split(":");
-    const destination = params.get("destination")?.split(":");
-    const year = parseInt(
-      params.get("year") || String(new Date().getFullYear())
-    );
-    const page = parseInt(params.get("page") || "1");
-    const pageSize = parseInt(params.get("pageSize") || "10");
-    const userId = params.get("user_id");
-
-    if (!home || !destination || !userId) {
-      throw { error: "Invalid request" };
+    const params = await resolveSearchParams(new URL(request.url));
+    if (params instanceof Error) {
+      throw params;
     }
+
+    const {
+      home: homePlace,
+      destination: destinationPlace,
+      country_code: countryCode,
+      year,
+      page,
+      pageSize,
+      cacheKey,
+    } = params;
+
+    const home = [
+      String(homePlace.result.geometry.location.lat),
+      String(homePlace.result.geometry.location.lng),
+    ];
+    const destination = [
+      String(destinationPlace.result.geometry.location.lat),
+      String(destinationPlace.result.geometry.location.lng),
+    ];
 
     let result: PlanResult | undefined;
     let headers: HeadersInit = {};
 
-    const cacheKey = `user:${userId};home:${home};desti:${destination};year:${year}`;
-
     let data = await redisClient.get(cacheKey);
     if (data) {
-      const { attractions, vacationPlans } = JSON.parse(data) as Pick<
+      const {
+        attractions,
+        vacationPlans,
+        home: homePlace,
+        destination: destinationPlace,
+      } = JSON.parse(data) as Pick<
         PlanResult,
-        "vacationPlans" | "attractions"
+        "vacationPlans" | "attractions" | "home" | "destination"
       >;
       const paginatedResults = getPaginatedVacationPlans(
         vacationPlans,
         page,
         pageSize
       );
-      result = { ...paginatedResults, attractions };
+      result = {
+        ...paginatedResults,
+        attractions,
+        home: homePlace,
+        destination: destinationPlace,
+      };
     } else {
       const holidayList = await getHolidays({
         countryCode,
@@ -498,13 +577,30 @@ export async function GET(request: Request) {
         cacheKey
       );
 
+      await redisClient.set(
+        cacheKey,
+        JSON.stringify({
+          vacationPlans,
+          attractions,
+          home: homePlace,
+          destination: destinationPlace,
+        }),
+        "EX",
+        3600
+      );
+
       const paginatedResults = getPaginatedVacationPlans(
         vacationPlans,
         page,
         pageSize
       );
 
-      result = { ...paginatedResults, attractions };
+      result = {
+        ...paginatedResults,
+        attractions,
+        home: homePlace,
+        destination: destinationPlace,
+      };
     }
 
     return Response.json(result, {

@@ -14,7 +14,8 @@ export function Navigation({ mobile = false, navLinks = [] }: NavigationProps) {
   const [mobileNavigationOpened, setMobileNavigationOpened] = useState(false);
 
   const navClassName = `
-      bg-white text-base dark:bg-slate-900
+      text-base 
+      ${mobile ? "bg-white dark:bg-slate-900" : ""}
       ${
         mobile
           ? `transition transform -right-2/3 fixed top-0 z-20 h-full w-2/3 overflow-y-auto py-4 sm:hidden ${

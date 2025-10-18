@@ -49,7 +49,7 @@ export default async function Page({
         throw { message: "Invalid plan id" };
       }
 
-      const cookieStore = cookies();
+      const cookieStore = await cookies();
       const userId = cookieStore.get("userid");
       const searchParamsStr = String(new URLSearchParams(searchParams));
 

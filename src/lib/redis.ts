@@ -37,7 +37,7 @@ class RedisClientCloneSingleton {
 }
 
 let redisClient: Redis | RedisClientClone;
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV !== "production") {
   redisClient = new Redis(process.env.REDIS_URL as string);
 } else {
   redisClient = RedisClientCloneSingleton.getInstance();

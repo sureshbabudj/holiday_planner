@@ -1,18 +1,63 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  verifyEmulatorToken,
+  verifyProductionToken,
+} from "@/lib/firebase/edge-verifier";
 
-import { v4 as uuidv4 } from "uuid";
+/* ---------- config ---------- */
+const PUBLIC_PATHS = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+];
+const PUBLIC_PREFIX = /^\/(_next|static|favicon|api\/)/;
 
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next();
+async function getUser(req: NextRequest) {
+  const token = req.cookies.get("__session")?.value;
+  if (!token) return null;
 
-  if (!request.cookies.has("userid")) {
-    const userId = uuidv4();
-    response.cookies.set({
-      name: "userid",
-      value: userId,
-    });
+  try {
+    if (process.env.NEXT_PUBLIC_USE_EMULATORS === "true") {
+      return await verifyEmulatorToken(token);
+    }
+    return await verifyProductionToken(token);
+  } catch {
+    return null;
+  }
+}
+
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  // static assets / next internals
+  if (PUBLIC_PREFIX.test(pathname)) {
+    return NextResponse.next();
   }
 
-  return response;
+  // explicit public pages
+  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
+
+  const user = await getUser(req);
+
+  // not authenticated → login
+  if (!user) {
+    console.log("User not found, redirecting to login");
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  // not verified → verify-email
+  if (user.email_verified || user.emailVerified) {
+    return NextResponse.next();
+  } else {
+    console.log("User not verified, redirecting to verify-email");
+    return NextResponse.redirect(new URL("/verify-email", req.url));
+  }
 }
+
+export const config = {
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+};

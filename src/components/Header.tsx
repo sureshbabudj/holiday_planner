@@ -3,6 +3,7 @@ import { NavLink } from "@/types";
 import { Logo } from "./Logo";
 import { Navigation } from "./Navigation";
 import React from "react";
+import Link from "next/link";
 
 interface HeaderProps {
   navLinks?: NavLink[];
@@ -11,9 +12,9 @@ interface HeaderProps {
 export function Header({ navLinks = links }: HeaderProps) {
   return (
     <header className="container flex w-full items-center justify-between py-4 px-6">
-      <a href="/">
+      <Link href="/">
         <Logo />
-      </a>
+      </Link>
       <Navigation navLinks={navLinks} />
       <Navigation mobile navLinks={navLinks} />
     </header>

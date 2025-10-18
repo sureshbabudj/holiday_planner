@@ -69,14 +69,14 @@ export default async function Page({
 }: {
   searchParams: PlanSearchParams;
 }) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const userId = cookieStore.get("userid");
 
   if (!userId?.value) {
     return <div>No User ID</div>;
   }
 
-  const searchParamsStr = String(new URLSearchParams(searchParams));
+  const searchParamsStr = String(new URLSearchParams(await searchParams));
   const planResonse = await getData(searchParamsStr, userId.value);
 
   if (!planResonse) {

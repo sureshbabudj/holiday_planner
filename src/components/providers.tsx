@@ -1,10 +1,12 @@
 "use client";
-import { useAuthStore } from "@/lib/stores/useAuthStore";
-import { auth } from "@/lib/firebase/client";
+
 import { onIdTokenChanged } from "firebase/auth";
-import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { PUBLIC_PATHS } from "@/data";
+import { useEffect } from "react";
+
+import { auth } from "@/lib/firebase/client";
+import { useAuthStore } from "@/lib/stores/useAuthStore";
+import { PUBLIC_PATHS } from "@/middleware";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const loading = useAuthStore((s) => s.loading);

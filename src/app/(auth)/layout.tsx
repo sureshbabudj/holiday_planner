@@ -1,4 +1,4 @@
-import { Logo } from "@/components/Logo";
+import { TreeDeciduous } from "lucide-react";
 
 export default function AuthLayout({
   children,
@@ -10,7 +10,7 @@ export default function AuthLayout({
       className="min-h-dvh flex flex-col items-center justify-center"
       data-auth-layout
     >
-      <Logo className="mb-8 w-32 text-primary" />
+      <TreeDeciduous className="mb-8 w-32 text-primary" />
       <div className="min-w-sm rounded-2xl border p-4">{children}</div>
     </div>
   );

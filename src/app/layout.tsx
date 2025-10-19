@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Lato } from "next/font/google";
-import "./globals.css";
+
 import { Providers } from "@/components/providers";
+
+import "@/app/globals.css";
 
 const bodyFont = Lato({ subsets: ["latin"], weight: ["400", "700"] });
 

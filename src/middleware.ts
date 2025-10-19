@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import {
   verifyEmulatorToken,
   verifyProductionToken,
 } from "@/lib/firebase/edge-verifier";
-import { AUTH_PATHS, PUBLIC_PREFIX } from "./data";
+
+/* ---------- config ---------- */
+export const AUTH_PATHS = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+];
+export const PUBLIC_PATHS = [...AUTH_PATHS, "/"];
+export const PUBLIC_PREFIX = /^\/(_next|static|favicon|api\/)/;
 
 async function getUser(req: NextRequest) {
   const token = req.cookies.get("__session")?.value;

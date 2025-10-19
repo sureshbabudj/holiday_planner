@@ -1,5 +1,16 @@
 import { NavLink } from "./types";
 
+/* ---------- config ---------- */
+export const AUTH_PATHS = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+];
+export const PUBLIC_PATHS = [...AUTH_PATHS, "/"];
+export const PUBLIC_PREFIX = /^\/(_next|static|favicon|api\/)/;
+
 export const links: NavLink[] = [
   {
     title: "Home",

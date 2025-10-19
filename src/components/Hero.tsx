@@ -54,11 +54,11 @@ export default function Hero() {
               >
                 <path
                   d="M6 6.4c16.8 16.8 380.8-11.2 397.6 5.602"
-                  stroke-width="12"
+                  strokeWidth={12}
                   fill="none"
-                  fill-rule="evenodd"
-                  stroke-linecap="round"
-                ></path>
+                  fillRule="evenodd"
+                  strokeLinecap="round"
+                />
               </svg>
               <span className="relative">who wander</span>
             </span>

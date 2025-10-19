@@ -35,7 +35,7 @@ export default function VerifyEmailPage() {
         open={dialogOpen}
         closeDialog={() => setDialogOpen(false)}
       />
-      <div className="max-w-sm mx-auto mt-20 space-y-4">
+      <div className="max-w-sm mx-auto m-2 space-y-4">
         <h1 className="text-2xl font-bold">Verify your email</h1>
         <p>We sent a link to your inbox. Click it, then press:</p>
         <Button onClick={checkNow} disabled={loading} className="w-full">

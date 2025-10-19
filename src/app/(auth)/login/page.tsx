@@ -14,7 +14,7 @@ export default function Login() {
   const router = useRouter();
 
   return (
-    <div className="max-w-sm mx-auto mt-20">
+    <div className="max-w-sm mx-auto m-2">
       <h1 className="text-2xl font-bold mb-4">Sign in</h1>
       <form
         onSubmit={async (e) => {

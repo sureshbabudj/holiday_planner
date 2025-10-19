@@ -3,16 +3,7 @@ import {
   verifyEmulatorToken,
   verifyProductionToken,
 } from "@/lib/firebase/edge-verifier";
-
-/* ---------- config ---------- */
-const PUBLIC_PATHS = [
-  "/login",
-  "/register",
-  "/forgot-password",
-  "/reset-password",
-  "/verify-email",
-];
-const PUBLIC_PREFIX = /^\/(_next|static|favicon|api\/)/;
+import { AUTH_PATHS, PUBLIC_PREFIX } from "./data";
 
 async function getUser(req: NextRequest) {
   const token = req.cookies.get("__session")?.value;
@@ -36,22 +27,28 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // explicit public pages
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
-  }
-
   const user = await getUser(req);
 
   // not authenticated → login
   if (!user) {
     console.log("User not found, redirecting to login");
+    if (AUTH_PATHS.some((p) => pathname.startsWith(p))) {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
   // not verified → verify-email
   if (user.email_verified || user.emailVerified) {
-    return NextResponse.next();
+    if (AUTH_PATHS.some((p) => pathname.startsWith(p))) {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+    const response = NextResponse.next();
+    response.cookies.set("userid", user.user_id || "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    });
+    return response;
   } else {
     console.log("User not verified, redirecting to verify-email");
     return NextResponse.redirect(new URL("/verify-email", req.url));

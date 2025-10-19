@@ -5,12 +5,13 @@ import { TreePalmIcon } from "lucide-react";
 
 const logoFont = Agbalumo({ subsets: ["latin"], weight: ["400"] });
 
-export function Logo() {
+export function Logo({ className }: { className?: string }) {
   return (
     <div
       className={cn(
         logoFont.className,
-        "flex flex-row w-full text-xl font-extrabold sm:w-fit items-center"
+        "flex flex-row w-full text-xl font-extrabold sm:w-fit items-center",
+        className
       )}
     >
       <span className="rounded-lg bg-violet-500 text-white w-8 h-8 p-1 me-2">

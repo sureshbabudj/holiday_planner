@@ -51,7 +51,7 @@ export default async function Page({
 
       const cookieStore = await cookies();
       const userId = cookieStore.get("userid");
-      const searchParamsStr = String(new URLSearchParams(searchParams));
+      const searchParamsStr = String(new URLSearchParams(await searchParams));
 
       if (!userId) {
         throw { message: "User Id not available" };

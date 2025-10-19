@@ -35,7 +35,7 @@ export default function ActionPage() {
   if (valid === false) return <p>Invalid or expired link.</p>;
 
   return (
-    <form onSubmit={submit} className="max-w-sm mx-auto mt-20 space-y-4">
+    <form onSubmit={submit} className="max-w-sm mx-auto m-2 space-y-4">
       <h1 className="text-2xl font-bold">New password</h1>
       <Label>New password</Label>
       <Input

@@ -8,15 +8,7 @@ function getAdmin() {
     process.env["FIREBASE_AUTH_EMULATOR_HOST"] = "localhost:9099";
   }
 
-  debugger;
-
   if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
-    console.log(
-      Buffer.from(
-        process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,
-        "base64"
-      ).toString()
-    );
     const decoded = JSON.parse(
       Buffer.from(
         process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,

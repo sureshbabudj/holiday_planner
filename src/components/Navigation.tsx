@@ -4,6 +4,16 @@ import { NavLink } from "@/types";
 import { NavLink as NavLinkComponent } from "./NavLink";
 import { ArrowRight, MenuIcon } from "lucide-react";
 import React, { useState } from "react";
+import { useAuthStore } from "@/lib/stores/useAuthStore";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import Link from "next/link";
+import { Separator } from "./ui/separator";
 
 interface NavigationProps {
   mobile?: boolean;
@@ -97,8 +107,62 @@ export function Navigation({ mobile = false, navLinks = [] }: NavigationProps) {
               )}
             </li>
           ))}
+
+          <li className={navListItemClassName}>
+            <UserProfileMenu mobile={mobile} />
+          </li>
         </ul>
       </nav>
+    </>
+  );
+}
+
+export function UserProfileMenu({ mobile = false }: { mobile?: boolean }) {
+  const { user, signOut } = useAuthStore();
+  return (
+    <>
+      {user ? (
+        <>
+          {mobile ? (
+            <div />
+          ) : (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Avatar>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {user?.photoURL && (
+                    <AvatarImage src={user?.photoURL} alt="User Avatar" />
+                  )}
+                  <AvatarFallback>
+                    <span className="text-sm">{user?.displayName}</span>
+                  </AvatarFallback>
+                </Avatar>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-40 p-0">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  asChild
+                >
+                  <Link href="/account">My Account</Link>
+                </Button>
+                <Separator />
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => signOut()}
+                >
+                  Logout
+                </Button>
+              </PopoverContent>
+            </Popover>
+          )}
+        </>
+      ) : (
+        <Button variant="default" asChild>
+          <Link href="/login">Login</Link>
+        </Button>
+      )}
     </>
   );
 }

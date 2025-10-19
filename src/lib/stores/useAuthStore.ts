@@ -78,11 +78,12 @@ export const useAuthStore = create<AuthState>()(
       set({ loading: true });
       try {
         await signOut();
+        set({ token: null, loading: false, user: null });
         await fetch("/api/session", { method: "DELETE" });
       } catch (e) {
         handleError(e);
       } finally {
-        set({ token: null, loading: false });
+        set({ token: null, loading: false, user: null });
       }
     },
     setUser: (user) => set({ user }),

@@ -96,15 +96,24 @@ VS Code settings are configured for:
 
 ## 🎯 Import Organization
 
+**ESLint handles all import organization** (not Prettier) to avoid conflicts.
+
 Imports are automatically organized in this order:
 
 1. Side effect imports
-2. Node.js built-in modules
+2. Node.js built-in modules (prefixed with `node:`)
 3. React and external packages
-4. Internal packages/components
-5. Relative imports (parent directories first)
-6. Same directory imports
+4. Internal packages/components (starting with `@` or `components`)
+5. Relative imports (parent directories first with `../`)
+6. Same directory imports (starting with `./`)
 7. CSS/style imports
+
+**How it works:**
+
+- **Prettier**: Handles code formatting (spacing, quotes, etc.)
+- **ESLint**: Handles import organization and unused import removal
+- **VS Code**: Runs ESLint auto-fix on save to organize imports
+- **Git hooks**: Ensure both formatting and import organization before commit
 
 ## 💡 Development Tips
 
@@ -123,6 +132,7 @@ If you encounter issues:
 3. **TypeScript errors**: Run `npm run type-check`
 4. **Git hook failures**: Fix linting/formatting issues first
 5. **VS Code not formatting**: Check if Prettier extension is installed and enabled
+6. **Import organization conflicts**: The setup uses ESLint for import organization (not Prettier). Run `npm run lint:fix` to organize imports properly
 
 ## 🔄 Manual Commands
 

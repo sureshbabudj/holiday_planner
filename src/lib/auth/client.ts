@@ -1,10 +1,10 @@
 import {
-  createUserWithEmailAndPassword,
   GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  signOut as emailSignOut,
   sendEmailVerification,
   signInWithEmailAndPassword,
   signInWithPopup,
-  signOut as emailSignOut,
 } from "firebase/auth";
 
 import { auth } from "@/lib/firebase/client";

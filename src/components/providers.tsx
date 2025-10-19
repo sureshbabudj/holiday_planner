@@ -1,8 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { onIdTokenChanged } from "firebase/auth";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
 
 import { auth } from "@/lib/firebase/client";
 import { useAuthStore } from "@/lib/stores/useAuthStore";

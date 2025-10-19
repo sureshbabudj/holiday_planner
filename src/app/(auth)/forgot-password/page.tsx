@@ -1,6 +1,6 @@
 "use client";
-import { sendPasswordResetEmail } from "firebase/auth";
 import { useState } from "react";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

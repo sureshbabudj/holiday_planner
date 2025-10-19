@@ -14,5 +14,5 @@
   "proseWrap": "preserve",
   "htmlWhitespaceSensitivity": "css",
   "embeddedLanguageFormatting": "auto",
-  "plugins": ["prettier-plugin-organize-imports"]
+  "plugins": []
 }

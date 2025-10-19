@@ -1,12 +1,14 @@
 "use client";
-import { useAuthStore } from "@/lib/stores/useAuthStore";
-import { sendVerifyEmail } from "@/lib/auth/client";
 import { reload } from "firebase/auth";
-import { auth } from "@/lib/firebase/client";
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { NotVerifiedEmailDialog } from "../_components/NotVerifiedEmailDialog";
 import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { sendVerifyEmail } from "@/lib/auth/client";
+import { auth } from "@/lib/firebase/client";
+import { useAuthStore } from "@/lib/stores/useAuthStore";
+
+import { NotVerifiedEmailDialog } from "../_components/NotVerifiedEmailDialog";
 
 export default function VerifyEmailPage() {
   const router = useRouter();

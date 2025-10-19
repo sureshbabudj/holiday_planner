@@ -65,7 +65,7 @@ export interface VacationPlan {
     travelTime: number;
     restDays: number[];
     sightseeingDays: number[];
-    transportMode: 'flight' | 'train' | 'bus' | 'car';
+    transportMode: "flight" | "train" | "bus" | "car";
   };
   holidaysIncluded: string[];
   ratings: {
@@ -83,17 +83,17 @@ export interface VacationPlanInput {
   duration: number;
   maxTravelTime: number;
   startDate: Date;
-  transportMode: 'flight' | 'train' | 'bus' | 'car';
-  budget: 'economical' | 'moderate' | 'luxury';
+  transportMode: "flight" | "train" | "bus" | "car";
+  budget: "economical" | "moderate" | "luxury";
 }
 ```
 
 ### 2. Firebase Configuration (`app/lib/firebase/config.ts`)
 
 ```typescript
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -112,14 +112,20 @@ export const db = getFirestore(app);
 ### 3. Vacation Generator (`app/lib/vacation/generator.ts`)
 
 ```typescript
-import { VacationPlan, VacationPlanInput } from '@/app/types/vacation';
-import { calculateRatings } from './rating';
-import { format, addDays, isHoliday } from 'date-fns';
+import { VacationPlan, VacationPlanInput } from "@/app/types/vacation";
+import { calculateRatings } from "./rating";
+import { format, addDays, isHoliday } from "date-fns";
 
 export class VacationPlanGenerator {
   private holidays: string[] = [
-    'New Year', 'Christmas', 'Thanksgiving', 'Independence Day',
-    'Labor Day', 'Memorial Day', 'Easter', 'Halloween'
+    "New Year",
+    "Christmas",
+    "Thanksgiving",
+    "Independence Day",
+    "Labor Day",
+    "Memorial Day",
+    "Easter",
+    "Halloween",
   ];
 
   generatePlans(input: VacationPlanInput): VacationPlan[] {
@@ -135,7 +141,7 @@ export class VacationPlanGenerator {
 
     // Mark the best plan
     const bestPlan = this.selectBestPlan(plans);
-    plans.forEach(plan => {
+    plans.forEach((plan) => {
       plan.isBestPlan = plan.id === bestPlan.id;
     });
 
@@ -147,11 +153,21 @@ export class VacationPlanGenerator {
     if (baseDuration <= 4) {
       variations.push(baseDuration - 1, baseDuration, baseDuration + 1);
     } else if (baseDuration <= 7) {
-      variations.push(baseDuration - 2, baseDuration - 1, baseDuration, baseDuration + 1);
+      variations.push(
+        baseDuration - 2,
+        baseDuration - 1,
+        baseDuration,
+        baseDuration + 1
+      );
     } else {
-      variations.push(baseDuration - 3, baseDuration - 1, baseDuration, baseDuration + 2);
+      variations.push(
+        baseDuration - 3,
+        baseDuration - 1,
+        baseDuration,
+        baseDuration + 2
+      );
     }
-    return variations.filter(d => d >= 2 && d <= 30);
+    return variations.filter((d) => d >= 2 && d <= 30);
   }
 
   private generateSinglePlan(
@@ -161,7 +177,7 @@ export class VacationPlanGenerator {
   ): VacationPlan | null {
     const travelTime = Math.min(input.maxTravelTime, Math.floor(duration / 4));
     const sightseeingDays = duration - travelTime - 1; // 1 day for rest
-    
+
     if (sightseeingDays < 1) return null;
 
     const holidaysIncluded = this.selectHolidays(input.startDate, duration);
@@ -176,11 +192,19 @@ export class VacationPlanGenerator {
         toDate: addDays(input.startDate, duration - 1),
         travelTime,
         restDays,
-        sightseeingDays: Array.from({ length: sightseeingDays }, (_, i) => i + 1),
+        sightseeingDays: Array.from(
+          { length: sightseeingDays },
+          (_, i) => i + 1
+        ),
         transportMode: input.transportMode,
       },
       holidaysIncluded,
-      ratings: calculateRatings(duration, travelTime, holidaysIncluded.length, input.budget),
+      ratings: calculateRatings(
+        duration,
+        travelTime,
+        holidaysIncluded.length,
+        input.budget
+      ),
       tags: this.generateTags(duration, input.budget),
       isBestPlan: false,
     };
@@ -197,7 +221,7 @@ export class VacationPlanGenerator {
   private calculateRestDays(duration: number, travelTime: number): number[] {
     const restDays = [];
     const totalDays = duration - travelTime;
-    
+
     // Add rest days at strategic intervals
     if (totalDays > 5) {
       restDays.push(Math.floor(totalDays / 2));
@@ -205,34 +229,36 @@ export class VacationPlanGenerator {
     if (totalDays > 10) {
       restDays.push(Math.floor(totalDays * 0.75));
     }
-    
+
     return restDays;
   }
 
   private generateTags(duration: number, budget: string): string[] {
     const tags = [];
-    
+
     // Duration tags
-    if (duration <= 4) tags.push('Short Duration');
-    else if (duration <= 7) tags.push('Medium Duration');
-    else tags.push('Long Duration');
-    
+    if (duration <= 4) tags.push("Short Duration");
+    else if (duration <= 7) tags.push("Medium Duration");
+    else tags.push("Long Duration");
+
     // Budget tags
-    if (budget === 'economical') tags.push('Economical');
-    else if (budget === 'luxury') tags.push('Pricy');
-    else tags.push('Moderate');
-    
+    if (budget === "economical") tags.push("Economical");
+    else if (budget === "luxury") tags.push("Pricy");
+    else tags.push("Moderate");
+
     // Pleasant tag for balanced plans
-    if (duration >= 5 && duration <= 9 && budget !== 'luxury') {
-      tags.push('Pleasant');
+    if (duration >= 5 && duration <= 9 && budget !== "luxury") {
+      tags.push("Pleasant");
     }
-    
+
     return tags;
   }
 
   private selectBestPlan(plans: VacationPlan[]): VacationPlan {
-    return plans.reduce((best, current) => 
-      current.ratings.overallRating > best.ratings.overallRating ? current : best
+    return plans.reduce((best, current) =>
+      current.ratings.overallRating > best.ratings.overallRating
+        ? current
+        : best
     );
   }
 }
@@ -276,8 +302,8 @@ export function calculateRatings(
   else if (duration > 4) shortSweetRating = 7;
 
   // Adjust for budget
-  if (budget === 'economical') shortSweetRating += 2;
-  else if (budget === 'luxury') shortSweetRating -= 2;
+  if (budget === "economical") shortSweetRating += 2;
+  else if (budget === "luxury") shortSweetRating -= 2;
 
   // Overall Rating (weighted average)
   const weights = {
@@ -287,12 +313,11 @@ export function calculateRatings(
     shortSweet: 0.25,
   };
 
-  const overallRating = (
+  const overallRating =
     ratioRating * weights.ratio +
     travelTimeRating * weights.travelTime +
     moreDaysRating * weights.moreDays +
-    shortSweetRating * weights.shortSweet
-  );
+    shortSweetRating * weights.shortSweet;
 
   return {
     ratioRating: Math.round(ratioRating * 10) / 10,
@@ -553,7 +578,7 @@ export function VacationPlanCard({ plan }: VacationPlanCardProps) {
           Best Plan
         </div>
       )}
-      
+
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>{plan.duration} Day Vacation</span>
@@ -566,7 +591,7 @@ export function VacationPlanCard({ plan }: VacationPlanCardProps) {
           {format(plan.itinerary.fromDate, 'MMM dd')} - {format(plan.itinerary.toDate, 'MMM dd, yyyy')}
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Tags */}
         <div className="flex flex-wrap gap-2">
@@ -641,9 +666,9 @@ export function VacationPlanCard({ plan }: VacationPlanCardProps) {
 ### 7. API Route (`app/api/generate-plans/route.ts`)
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { VacationPlanGenerator } from '@/app/lib/vacation/generator';
-import { VacationPlanInput } from '@/app/types/vacation';
+import { NextRequest, NextResponse } from "next/server";
+import { VacationPlanGenerator } from "@/app/lib/vacation/generator";
+import { VacationPlanInput } from "@/app/types/vacation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -661,9 +686,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ plans });
   } catch (error) {
-    console.error('Error generating vacation plans:', error);
+    console.error("Error generating vacation plans:", error);
     return NextResponse.json(
-      { error: 'Failed to generate vacation plans' },
+      { error: "Failed to generate vacation plans" },
       { status: 500 }
     );
   }
@@ -711,7 +736,7 @@ export default function Home() {
       <h1 className="text-4xl font-bold text-center mb-8">
         AI Vacation Planner
       </h1>
-      
+
       <div className="max-w-2xl mx-auto mb-12">
         <VacationPlanForm onSubmit={handleSubmit} isLoading={isLoading} />
       </div>
@@ -762,39 +787,49 @@ The app generates multiple vacation plan variations, calculates ratings based on
 
 Below is a **drop-in upgrade** that adds the two big missing pieces:
 
-1. **Home & Destination pickers** with Google-Places autocomplete.  
+1. **Home & Destination pickers** with Google-Places autocomplete.
 2. **Rich itinerary** (daily schedule, hotels, restaurants, weather, crowd level) returned by the backend and rendered in the card.
 
 The changes are **additive** – you can paste the new files over the old ones or merge the snippets.
 
---------------------------------------------------
+---
+
 1.  Install extra deps
---------------------------------------------------
+
+---
+
 ```bash
 npm install @googlemaps/js-api-loader
 npm install axios date-fns-tz  # weather & TZ helpers
 ```
 
---------------------------------------------------
+---
+
 2.  Environment – add to `.env.local`
---------------------------------------------------
+
+---
+
 ```
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_KEY
 OPENWEATHER_API_KEY=YOUR_OPENWEATHER_KEY   # free tier is fine
 ```
 
---------------------------------------------------
+---
+
 3.  Types – extend `VacationPlan`
---------------------------------------------------
+
+---
+
 app/types/vacation.ts
+
 ```typescript
 export interface VacationPlan {
   id: string;
   duration: number;
   maxTravelTime: number;
-  homeCity: google.maps.places.PlaceResult;   // <- new
+  homeCity: google.maps.places.PlaceResult; // <- new
   destinationCity: google.maps.places.PlaceResult; // <- new
-  itinerary: DailyItinerary[];                // <- new
+  itinerary: DailyItinerary[]; // <- new
   holidaysIncluded: string[];
   ratings: {
     ratioRating: number;
@@ -813,19 +848,28 @@ export interface DailyItinerary {
   transportLeg?: { mode: string; duration: string; from: string; to: string };
   hotel?: { name: string; address: string; price: string };
   places: { name: string; type: string; description: string; photo?: string }[];
-  restaurants: { name: string; cuisine: string; rating: number; price_level: number }[];
+  restaurants: {
+    name: string;
+    cuisine: string;
+    rating: number;
+    price_level: number;
+  }[];
   weather: { temp: number; condition: string; icon: string };
-  crowd: 'low' | 'medium' | 'high';
+  crowd: "low" | "medium" | "high";
 }
 ```
 
---------------------------------------------------
+---
+
 4.  Google Places Hook (client-only)
---------------------------------------------------
+
+---
+
 app/lib/hooks/usePlacesAutocomplete.ts
+
 ```typescript
-import { useEffect, useRef, useState } from 'react';
-import { Loader } from '@googlemaps/js-api-loader';
+import { useEffect, useRef, useState } from "react";
+import { Loader } from "@googlemaps/js-api-loader";
 
 let loader: Loader;
 
@@ -839,7 +883,7 @@ export function usePlacesAutocomplete(
     if (!window.google) {
       loader = new Loader({
         apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-        libraries: ['places'],
+        libraries: ["places"],
       });
       loader.load().then(() => setReady(true));
     } else setReady(true);
@@ -848,20 +892,24 @@ export function usePlacesAutocomplete(
   useEffect(() => {
     if (!ready || !inputRef.current) return;
     const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
-      types: ['(cities)'],
-      fields: ['place_id', 'name', 'formatted_address', 'geometry', 'photos'],
+      types: ["(cities)"],
+      fields: ["place_id", "name", "formatted_address", "geometry", "photos"],
     });
-    autocomplete.addListener('place_changed', () => {
+    autocomplete.addListener("place_changed", () => {
       onPlaceChanged(autocomplete.getPlace());
     });
   }, [ready]);
 }
 ```
 
---------------------------------------------------
+---
+
 5.  Updated Form – add city pickers
---------------------------------------------------
-app/components/vacation-planner/VacationPlanForm.tsx  (only new parts shown)
+
+---
+
+app/components/vacation-planner/VacationPlanForm.tsx (only new parts shown)
+
 ```typescript
 import { usePlacesAutocomplete } from '@/app/lib/hooks/usePlacesAutocomplete';
 import { Input } from '@/components/ui/input';
@@ -886,12 +934,16 @@ usePlacesAutocomplete(destInput, setDest);
 </FormItem>
 ```
 
---------------------------------------------------
+---
+
 6.  Backend – enrich itinerary
---------------------------------------------------
-app/lib/vacation/generator.ts  (new method)
+
+---
+
+app/lib/vacation/generator.ts (new method)
+
 ```typescript
-import axios from 'axios';
+import axios from "axios";
 
 async function buildDailyItinerary(
   home: google.maps.places.PlaceResult,
@@ -906,35 +958,68 @@ async function buildDailyItinerary(
 
   for (let i = 0; i < duration; i++) {
     const date = addDays(startDate, i);
-    const iso = format(date, 'yyyy-MM-dd');
+    const iso = format(date, "yyyy-MM-dd");
 
     // weather
     const w = await axios.get(
       `https://api.openweathermap.org/data/2.5/weather`,
-      { params: { lat, lon: lng, dt: Math.floor(date.getTime()/1000), appid: process.env.OPENWEATHER_API_KEY!, units: 'metric' } }
+      {
+        params: {
+          lat,
+          lon: lng,
+          dt: Math.floor(date.getTime() / 1000),
+          appid: process.env.OPENWEATHER_API_KEY!,
+          units: "metric",
+        },
+      }
     );
-    const weather = { temp: Math.round(w.data.main.temp), condition: w.data.weather[0].main, icon: w.data.weather[0].icon };
+    const weather = {
+      temp: Math.round(w.data.main.temp),
+      condition: w.data.weather[0].main,
+      icon: w.data.weather[0].icon,
+    };
 
     // mock hotels / restaurants / places (replace with Google Places TextSearch or GenKit calls)
-    const hotel = i === 0 || i === Math.floor(duration/2) ? { name: 'Hilton '+dest.name, address: 'City center', price: '$120' } : undefined;
+    const hotel =
+      i === 0 || i === Math.floor(duration / 2)
+        ? { name: "Hilton " + dest.name, address: "City center", price: "$120" }
+        : undefined;
     const restaurants = [
-      { name: 'Local Bistro', cuisine: 'Italian', rating: 4.5, price_level: 2 },
-      { name: 'Street Food Hub', cuisine: 'Local', rating: 4.7, price_level: 1 },
+      { name: "Local Bistro", cuisine: "Italian", rating: 4.5, price_level: 2 },
+      {
+        name: "Street Food Hub",
+        cuisine: "Local",
+        rating: 4.7,
+        price_level: 1,
+      },
     ];
     const places = [
-      { name: dest.name+' Old Town', type: 'sight', description: 'Historic centre' },
-      { name: 'City Museum', type: 'museum', description: 'Art & history' },
+      {
+        name: dest.name + " Old Town",
+        type: "sight",
+        description: "Historic centre",
+      },
+      { name: "City Museum", type: "museum", description: "Art & history" },
     ];
 
     days.push({
-      day: i+1,
+      day: i + 1,
       date: iso,
-      transportLeg: i === 0 ? { mode: transportMode, duration: '2 h', from: home.name!, to: dest.name! } : undefined,
+      transportLeg:
+        i === 0
+          ? {
+              mode: transportMode,
+              duration: "2 h",
+              from: home.name!,
+              to: dest.name!,
+            }
+          : undefined,
       hotel,
       places,
       restaurants,
       weather,
-      crowd: Math.random() > 0.6 ? 'high' : Math.random() > 0.3 ? 'medium' : 'low',
+      crowd:
+        Math.random() > 0.6 ? "high" : Math.random() > 0.3 ? "medium" : "low",
     });
   }
   return days;
@@ -943,10 +1028,14 @@ async function buildDailyItinerary(
 
 Call this inside `generateSinglePlan` and assign to `plan.itinerary`.
 
---------------------------------------------------
+---
+
 7.  Card – render rich itinerary
---------------------------------------------------
-app/components/vacation-planner/VacationPlanCard.tsx  (add inside CardContent)
+
+---
+
+app/components/vacation-planner/VacationPlanCard.tsx (add inside CardContent)
+
 ```typescript
 {plan.itinerary.map((d) => (
   <div key={d.day} className="border rounded p-3 space-y-2">
@@ -963,11 +1052,15 @@ app/components/vacation-planner/VacationPlanCard.tsx  (add inside CardContent)
 ))}
 ```
 
---------------------------------------------------
+---
+
 8.  Wire everything
---------------------------------------------------
-- Pass `homeCity` & `destinationCity` from the form to the API.  
+
+---
+
+- Pass `homeCity` & `destinationCity` from the form to the API.
 - POST body now includes:
+
 ```json
 {
   "duration": 7,
@@ -981,12 +1074,15 @@ app/components/vacation-planner/VacationPlanCard.tsx  (add inside CardContent)
 }
 ```
 
---------------------------------------------------
+---
+
 9.  Quick smoke test
---------------------------------------------------
-1. `npm run dev`  
-2. Type “Berlin” in Home, “Barcelona” in Destination – autocomplete fires.  
-3. Submit → backend builds day-by-day plan with hotels, restaurants, weather, crowd.  
+
+---
+
+1. `npm run dev`
+2. Type “Berlin” in Home, “Barcelona” in Destination – autocomplete fires.
+3. Submit → backend builds day-by-day plan with hotels, restaurants, weather, crowd.
 4. Card expands to show the full timeline.
 
 You now have **city-aware autocomplete** and a **detailed daily itinerary** without breaking the existing rating/tagging logic.

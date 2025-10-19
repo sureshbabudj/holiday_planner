@@ -1,4 +1,4 @@
-import { jwtVerify, decodeProtectedHeader, importX509 } from "jose";
+import { decodeProtectedHeader, importX509, jwtVerify } from "jose";
 
 const EMU_BASE = "http://localhost:9099/identitytoolkit.googleapis.com/v1";
 const GOOGLE_PUB_KEYS_URL =

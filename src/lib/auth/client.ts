@@ -1,12 +1,13 @@
-import { auth } from "@/lib/firebase/client";
 import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signInWithPopup,
   GoogleAuthProvider,
+  createUserWithEmailAndPassword,
   signOut as emailSignOut,
   sendEmailVerification,
+  signInWithEmailAndPassword,
+  signInWithPopup,
 } from "firebase/auth";
+
+import { auth } from "@/lib/firebase/client";
 
 export async function signInEmail(email: string, password: string) {
   const cred = await signInWithEmailAndPassword(auth, email, password);

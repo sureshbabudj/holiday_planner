@@ -1,13 +1,14 @@
-import { create } from "zustand";
-import { devtools } from "zustand/middleware";
-import {
-  signInEmail,
-  signUpEmail,
-  signInGoogle,
-  signOut,
-} from "@/lib/auth/client";
 import { User } from "firebase/auth";
 import { toast } from "sonner";
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+
+import {
+  signInEmail,
+  signInGoogle,
+  signOut,
+  signUpEmail,
+} from "@/lib/auth/client";
 
 type AuthState = {
   loading: boolean;

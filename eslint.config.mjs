@@ -1,6 +1,6 @@
+import { FlatCompat } from "@eslint/eslintrc";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,7 +27,8 @@ const eslintConfig = [
     files: ["**/*.{js,jsx,ts,tsx}"],
     plugins: {
       "unused-imports": (await import("eslint-plugin-unused-imports")).default,
-      "simple-import-sort": (await import("eslint-plugin-simple-import-sort")).default,
+      "simple-import-sort": (await import("eslint-plugin-simple-import-sort"))
+        .default,
     },
     rules: {
       // Import organization and cleanup

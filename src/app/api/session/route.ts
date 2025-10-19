@@ -1,5 +1,6 @@
-import { adminAuth } from "@/lib/firebase/admin";
 import { cookies } from "next/headers";
+
+import { adminAuth } from "@/lib/firebase/admin";
 
 export async function POST(req: Request) {
   const { token } = await req.json();
